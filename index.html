@@ -623,7 +623,7 @@
 
 <div class="crop-modal" id="avatar-crop-modal">
   <div class="crop-modal-inner">
-    <div class="crop-modal-title">Drag to reposition, use the slider to zoom</div>
+    <div class="crop-modal-title">Drag to reposition, pinch or use the slider to zoom</div>
     <div class="crop-viewport" id="crop-viewport">
       <img id="crop-image" alt="" draggable="false" />
       <div class="crop-mask"></div>
@@ -818,8 +818,18 @@ async function continueWithGoogle(btn){
 // ---------------------------------------------------------------
 let cropState = null;
 let cropDragging = false, cropDragStart = {x:0,y:0}, cropPanStart = {x:0,y:0};
+// Active touches by pointerId, so a second finger landing mid-drag is
+// recognised as the start of a pinch instead of just yanking the single-
+// finger pan target around (the bug: both fingers' pointermove events were
+// being fed into the same one-finger pan state, one finger's arrival
+// resetting cropDragStart out from under the other — that's the "buggy"
+// jumping Arth saw).
+let cropPointers = new Map();
+let cropPinchStartDist = 0, cropPinchStartZoom = 1;
 
 function openAvatarCropper(srcDataUrl, onConfirm){
+  cropPointers.clear();
+  cropDragging = false;
   const imgEl = document.getElementById('crop-image');
   const zoomSlider = document.getElementById('crop-zoom-slider');
   imgEl.onload = () => {
@@ -836,6 +846,8 @@ function openAvatarCropper(srcDataUrl, onConfirm){
 function closeCropModal(){
   document.getElementById('avatar-crop-modal').classList.remove('show');
   cropState = null;
+  cropPointers.clear();
+  cropDragging = false;
 }
 function clampCropPan(){
   const s = cropState;
@@ -861,23 +873,80 @@ function onCropZoomChange(newZoom){
   cropState.zoom = newZoom;
   applyCropTransform();
 }
-function cropPointerDown(e){
+// Zoom while keeping the image point currently under `viewportPoint` (a
+// point in crop-viewport local coordinates) fixed on screen — the anchor
+// math a real pinch needs so the photo zooms in on where your fingers
+// actually are, not just re-centres. onCropZoomChange's simpler
+// proportional version is fine for the slider (deliberate, no anchor
+// point to honour) so it's left as-is; this is only for the pinch gesture.
+function zoomCropAtPoint(newZoom, viewportPoint){
   if(!cropState) return;
-  cropDragging = true;
-  const p = e.touches ? e.touches[0] : e;
-  cropDragStart = { x:p.clientX, y:p.clientY };
-  cropPanStart = { x:cropState.panX, y:cropState.panY };
-  if(e.pointerId !== undefined) e.target.setPointerCapture(e.pointerId);
-  e.preventDefault();
-}
-function cropPointerMove(e){
-  if(!cropDragging || !cropState) return;
-  const p = e.touches ? e.touches[0] : e;
-  cropState.panX = cropPanStart.x + (p.clientX - cropDragStart.x);
-  cropState.panY = cropPanStart.y + (p.clientY - cropDragStart.y);
+  const s = cropState;
+  const r = newZoom / s.zoom;
+  const dispW0 = s.natW*s.baseScale*s.zoom, dispH0 = s.natH*s.baseScale*s.zoom;
+  const left0 = (s.viewport-dispW0)/2 + s.panX, top0 = (s.viewport-dispH0)/2 + s.panY;
+  const left1 = viewportPoint.x - (viewportPoint.x-left0)*r;
+  const top1 = viewportPoint.y - (viewportPoint.y-top0)*r;
+  const dispW1 = s.natW*s.baseScale*newZoom, dispH1 = s.natH*s.baseScale*newZoom;
+  s.zoom = newZoom;
+  s.panX = left1 - (s.viewport-dispW1)/2;
+  s.panY = top1 - (s.viewport-dispH1)/2;
   applyCropTransform();
 }
-function cropPointerUp(){ cropDragging = false; }
+function cropViewportPoint(clientX, clientY){
+  const rect = document.getElementById('crop-viewport').getBoundingClientRect();
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+function cropPointerDown(e){
+  if(!cropState) return;
+  try{ if(e.target.setPointerCapture) e.target.setPointerCapture(e.pointerId); }catch(err){ /* capture is a nicety, not a requirement — keep tracking the pointer either way */ }
+  cropPointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
+  e.preventDefault();
+
+  if(cropPointers.size === 2){
+    // second finger landed — hand off from single-finger pan to pinch.
+    cropDragging = false;
+    const [p1, p2] = [...cropPointers.values()];
+    cropPinchStartDist = Math.hypot(p1.x-p2.x, p1.y-p2.y) || 1;
+    cropPinchStartZoom = cropState.zoom;
+  } else if(cropPointers.size === 1){
+    cropDragging = true;
+    cropDragStart = { x:e.clientX, y:e.clientY };
+    cropPanStart = { x:cropState.panX, y:cropState.panY };
+  }
+}
+function cropPointerMove(e){
+  if(!cropState || !cropPointers.has(e.pointerId)) return;
+  cropPointers.set(e.pointerId, { x:e.clientX, y:e.clientY });
+
+  if(cropPointers.size >= 2){
+    const [p1, p2] = [...cropPointers.values()];
+    const dist = Math.hypot(p1.x-p2.x, p1.y-p2.y) || 1;
+    const midpoint = cropViewportPoint((p1.x+p2.x)/2, (p1.y+p2.y)/2);
+    const slider = document.getElementById('crop-zoom-slider');
+    const min = parseFloat(slider.min), max = parseFloat(slider.max);
+    const newZoom = Math.min(max, Math.max(min, cropPinchStartZoom * (dist/cropPinchStartDist)));
+    zoomCropAtPoint(newZoom, midpoint);
+    slider.value = newZoom;
+  } else if(cropDragging){
+    cropState.panX = cropPanStart.x + (e.clientX - cropDragStart.x);
+    cropState.panY = cropPanStart.y + (e.clientY - cropDragStart.y);
+    applyCropTransform();
+  }
+}
+function cropPointerUp(e){
+  cropPointers.delete(e.pointerId);
+  if(cropPointers.size === 1 && cropState){
+    // one finger lifted mid-pinch — resume single-finger pan from the
+    // remaining finger's current position so there's no jump.
+    const remaining = [...cropPointers.values()][0];
+    cropDragging = true;
+    cropDragStart = { x:remaining.x, y:remaining.y };
+    cropPanStart = { x:cropState.panX, y:cropState.panY };
+  } else {
+    cropDragging = false;
+  }
+}
 function confirmCrop(){
   const s = cropState; if(!s) return;
   const { left, top, dispW } = clampCropPan();
