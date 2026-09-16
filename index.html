@@ -26,6 +26,11 @@
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   svg{ display:block; flex:none; }
+  /* Browser-supplied surfaces, themed rather than left at OS defaults. */
+  ::selection{ background:var(--primary-tint); color:var(--ink); }
+  :focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
+  button:disabled, button[disabled]{ opacity:.5; cursor:not-allowed; }
+  input:disabled, textarea:disabled{ opacity:.6; cursor:not-allowed; }
   .brand-logo{ height:22px; width:auto; display:block; }
   .brand-logo.lg{ height:34px; }
   body{
@@ -59,6 +64,7 @@
   .text-input, .text-area{
     width:100%; background:var(--surface2); border:1px solid transparent; border-radius:12px;
     color:var(--ink); font-family:var(--font-sans); font-size:15px; padding:14px 16px; margin-bottom:12px;
+    caret-color:var(--primary);
   }
   .text-input:focus, .text-area:focus{ outline:none; border-color:var(--primary); background:var(--surface); }
   .text-area{ min-height:90px; resize:vertical; line-height:1.5; }
@@ -102,7 +108,7 @@
   /* ---- mode select: clean list rows ---- */
   #screen-setup.active{ display:flex; flex-direction:column; }
   .setup-content{ flex:1; display:flex; flex-direction:column; justify-content:center; }
-  .mode-card{ display:flex; align-items:center; gap:14px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:12px; cursor:pointer; }
+  .mode-card{ display:flex; align-items:center; gap:14px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:12px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 24px -12px rgba(255,75,22,.22); }
   .mode-card:active{ opacity:.7; }
   .mode-glyph{ width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; background:var(--primary); }
   .mode-text .t{ font-family:var(--font-sans); font-weight:700; font-size:16px; color:var(--ink); }
@@ -156,7 +162,10 @@
   .empty-hero .copy{ color:var(--muted); font-size:14.5px; line-height:1.55; margin-bottom:28px; max-width:26ch; }
   .empty-hero .btn{ width:auto; padding:14px 26px; }
 
-  .post-card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:18px; margin-bottom:16px; }
+  /* Real elevation: an offset+blur pair, not a flat colour halo. A tight dark
+     contact shadow for grounding plus a wider, warm-tinted ambient shadow
+     (from the brand hue, not generic grey) for lift on the dark surface. */
+  .post-card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:18px; margin-bottom:16px; box-shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 24px -12px rgba(255,75,22,.22); }
   .post-author{ display:flex; align-items:center; gap:12px; margin-bottom:11px; }
   .post-avatar{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex:none; background:var(--primary-tint); color:var(--primary-light); }
   .post-author-name{ font-family:var(--font-sans); font-weight:700; font-size:15px; color:var(--ink); }
@@ -235,7 +244,7 @@
   .comment-row{ display:flex; gap:8px; font-size:12.5px; color:var(--muted); padding:6px 2px; }
   .comment-row b{ color:var(--ink); }
   .comment-input-row{ display:flex; gap:8px; margin-top:10px; }
-  .comment-input-row input{ flex:1; background:var(--surface2); border:1px solid transparent; border-radius:100px; padding:9px 14px; color:var(--ink); font-family:var(--font-sans); font-size:12.5px; }
+  .comment-input-row input{ flex:1; background:var(--surface2); border:1px solid transparent; border-radius:100px; padding:9px 14px; color:var(--ink); font-family:var(--font-sans); font-size:12.5px; caret-color:var(--primary); }
   .comment-input-row input:focus{ outline:none; border-color:var(--primary); }
   .comment-send{ background:var(--primary-dim); color:#fff; border:none; border-radius:100px; padding:0 16px; font-weight:700; font-size:12.5px; }
 
@@ -264,7 +273,8 @@
 
   /* ---- find friends ---- */
   .search-box{ display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid transparent; border-radius:100px; padding:12px 16px; margin-bottom:8px; color:var(--muted); }
-  .search-box input{ flex:1; background:none; border:none; outline:none; color:var(--ink); font-family:var(--font-sans); font-size:14.5px; }
+  .search-box:focus-within{ border-color:var(--primary); }
+  .search-box input{ flex:1; background:none; border:none; outline:none; color:var(--ink); font-family:var(--font-sans); font-size:14.5px; caret-color:var(--primary); }
   .search-box input::placeholder{ color:var(--muted); }
   .user-row{ display:flex; align-items:center; gap:12px; padding:11px 2px; }
   .user-avatar{ width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:17px; flex:none; background:var(--primary-tint); color:var(--primary-light); }
@@ -277,17 +287,6 @@
   .btn-following{ background:var(--primary-tint); color:var(--primary-light); border:none; font-family:var(--font-sans); font-weight:600; font-size:12.5px; border-radius:100px; padding:8px 16px; white-space:nowrap; }
   .btn-whatsapp{ display:flex; align-items:center; gap:6px; background:transparent; color:var(--whatsapp); border:1px solid var(--whatsapp); font-family:var(--font-sans); font-weight:700; font-size:12.5px; border-radius:100px; padding:8px 14px; white-space:nowrap; cursor:pointer; transition:transform .12s ease; }
   .btn-whatsapp:active{ transform:scale(.94); }
-  .divider-row{ display:flex; align-items:center; gap:12px; margin:24px 0; }
-  .divider-row .line{ flex:1; height:1px; background:var(--line); }
-  .divider-row span{ color:var(--muted); font-size:12.5px; }
-  .contacts-card{ background:var(--surface2); border:none; border-radius:16px; padding:22px; margin-bottom:24px; color:var(--muted); }
-  .contacts-card svg{ margin-bottom:12px; color:var(--primary-light); }
-  .contacts-card h3{ font-family:var(--font-display); font-weight:400; font-size:18px; text-transform:uppercase; margin:0 0 7px; color:var(--ink); }
-  .contacts-card p{ color:var(--muted); font-size:12.5px; line-height:1.55; margin:0 0 17px; }
-  .btn-connect{ width:100%; background:var(--primary-dim); color:#fff; border:none; font-family:var(--font-sans); font-weight:700; font-size:14px; border-radius:100px; padding:13px; cursor:pointer; transition:transform .12s ease; }
-  .btn-connect:active{ transform:scale(.97); }
-  .btn-connected{ width:100%; background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--font-sans); font-weight:600; font-size:13px; border-radius:100px; padding:11px; text-align:center; }
-  .section-heading{ font-family:var(--font-sans); font-weight:700; font-size:13px; margin:20px 0 5px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
 
   /* ---- bottom nav (3 items) ---- */
   .bottom-nav{ position:fixed; bottom:0; left:0; right:0; display:flex; justify-content:center; z-index:40; background:var(--surface); border-top:1px solid var(--line); }
@@ -538,11 +537,11 @@
   </div>
 
   <div class="share-icons-row">
-    <button class="share-icon-item" onclick="shareToDestination('Instagram Story')"><span class="share-icon-circle ig">📷</span>Instagram Story</button>
-    <button class="share-icon-item" onclick="shareToDestination('Instagram Messages')"><span class="share-icon-circle ig">✉️</span>Instagram DM</button>
-    <button class="share-icon-item" onclick="shareToDestination('WhatsApp')"><span class="share-icon-circle wa">💬</span>WhatsApp</button>
-    <button class="share-icon-item" onclick="shareToDestination('Messages')"><span class="share-icon-circle msg">💬</span>Messages</button>
-    <button class="share-icon-item" onclick="shareToDestination('More')"><span class="share-icon-circle more">•••</span>More</button>
+    <button class="share-icon-item" onclick="shareToDestination('Instagram Story')"><span class="share-icon-circle ig"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2h6l2 2h3v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V8z"/><circle cx="12" cy="13" r="3.3"/></svg></span>Instagram Story</button>
+    <button class="share-icon-item" onclick="shareToDestination('Instagram Messages')"><span class="share-icon-circle ig"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3 2 10.5l7 3 3 7 4-6.5L22 3z"/><path d="M9 13.5 22 3"/></svg></span>Instagram DM</button>
+    <button class="share-icon-item" onclick="shareToDestination('WhatsApp')"><span class="share-icon-circle wa"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8c-1.2 0-2.4-.3-3.4-.8L4 20l1.3-4.2C4.5 14.5 4 13.3 4 12z"/></svg></span>WhatsApp</button>
+    <button class="share-icon-item" onclick="shareToDestination('Messages')"><span class="share-icon-circle msg"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8c-1.2 0-2.4-.3-3.4-.8L4 20l1.3-4.2C4.5 14.5 4 13.3 4 12z"/></svg></span>Messages</button>
+    <button class="share-icon-item" onclick="shareToDestination('More')"><span class="share-icon-circle more"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" stroke="none"><circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/></svg></span>More</button>
   </div>
   <div class="share-fallback-row">
     <button onclick="downloadShareImage()">Download image</button>
