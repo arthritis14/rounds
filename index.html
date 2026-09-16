@@ -1189,7 +1189,7 @@ async function renderFeed(){
   }
 
   const { data: rows, error } = await sb.from('events')
-    .select('*, profiles(display_name, photo_url)')
+    .select('*, profiles!events_user_id_fkey(display_name, photo_url)')
     .in('user_id', followingIds)
     .order('posted_at', { ascending: false });
   if(error){ body.innerHTML = `<div class="empty">Couldn't load your feed — check your connection.</div>`; return; }
