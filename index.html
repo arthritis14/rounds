@@ -1428,6 +1428,16 @@ sb.auth.onAuthStateChange(async (event, session) => {
     // (the DB trigger runs async) — retry briefly rather than dead-end.
     let profile = await loadOwnProfile(session.user.id);
     for(let i = 0; !profile && i < 5; i++){ await new Promise(r => setTimeout(r, 400)); profile = await loadOwnProfile(session.user.id); }
+    if(!profile){
+      // session token is valid but there's no matching profile row (e.g. it
+      // was deleted, or the trigger genuinely failed) — don't leave a
+      // signed-in-looking screen with no user behind it.
+      currentUser = null;
+      authBootstrapped = true;
+      await sb.auth.signOut();
+      showScreen('screen-auth');
+      return;
+    }
     currentUser = profile;
     if(!authBootstrapped){
       authBootstrapped = true;
