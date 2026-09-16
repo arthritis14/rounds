@@ -65,7 +65,7 @@
   .back-link{ color:var(--muted); font-size:14px; display:inline-block; margin-bottom:16px; cursor:pointer; font-weight:500; }
 
   /* ---- buttons / inputs ---- */
-  .btn{ display:flex; align-items:center; justify-content:center; font-family:var(--font-sans); font-weight:600; font-size:16px; border:none; border-radius:100px; cursor:pointer; padding:15px 20px; width:100%; transition:transform .12s ease; }
+  .btn{ display:flex; align-items:center; justify-content:center; font-family:var(--font-sans); font-weight:600; font-size:16px; border:none; border-radius:100px; cursor:pointer; padding:15px 20px; width:100%; transition:transform .12s var(--ease-out); }
   .btn:active{ transform:scale(.97); }
   /* solid-fill + white text uses --primary-dim rather than --primary: 5.6:1 vs 3.4:1
      contrast against white, so button labels clear WCAG AA (4.5:1) without
@@ -173,7 +173,7 @@
   #screen-setup.active{ display:flex; flex-direction:column; }
   .setup-content{ flex:1; display:flex; flex-direction:column; justify-content:flex-start; padding-top:28px; }
   .setup-content h1{ margin-bottom:26px; }
-  .mode-card{ display:flex; align-items:center; gap:16px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:12px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 24px -12px rgba(255,75,22,.22); transition:transform .12s ease; }
+  .mode-card{ display:flex; align-items:center; gap:16px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:12px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 24px -12px rgba(255,75,22,.22); transition:transform .12s var(--ease-out); }
   .mode-card:active{ opacity:.7; transform:scale(.98); }
   .mode-glyph{ width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; background:var(--primary-dim); }
   .mode-text{ flex:1; min-width:0; }
@@ -185,7 +185,7 @@
   .ready-badge{ display:inline-flex; align-items:center; gap:8px; background:var(--primary-tint); border:none; padding:8px 14px; border-radius:100px; font-size:13.5px; color:var(--primary-light); font-weight:600; margin-bottom:20px; }
   .dot{ width:7px; height:7px; border-radius:50%; background:var(--primary); }
   .start-ring-wrap{ display:flex; justify-content:center; margin:40px 0 44px; }
-  .start-ring{ width:180px; height:180px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--surface2); border:3px solid var(--primary-dim); position:relative; cursor:pointer; transition:transform .12s ease; }
+  .start-ring{ width:180px; height:180px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--surface2); border:3px solid var(--primary-dim); position:relative; cursor:pointer; transition:transform .12s var(--ease-out); }
   .start-ring:active{ transform:scale(.96); }
   .start-ring span{ font-family:var(--font-display); font-weight:400; font-size:19px; letter-spacing:.07em; color:var(--primary-dim); }
 
@@ -233,7 +233,10 @@
   /* Real elevation: an offset+blur pair, not a flat colour halo. A tight dark
      contact shadow for grounding plus a wider, warm-tinted ambient shadow
      (from the brand hue, not generic grey) for lift on the dark surface. */
-  .post-card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:18px; margin-bottom:16px; box-shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 24px -12px rgba(255,75,22,.22); }
+  @keyframes cardin{ from{ opacity:0; transform:translateY(10px); } to{ opacity:1; transform:none; } }
+  .post-card{ background:var(--surface); border:1px solid var(--line); border-radius:18px; padding:18px; margin-bottom:16px; box-shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 24px -12px rgba(255,75,22,.22); animation:cardin 340ms var(--ease-out) both; }
+  @keyframes cheerspop{ 0%{ transform:scale(1); } 45%{ transform:scale(1.35); } 100%{ transform:scale(1); } }
+  .cheers-emoji{ display:inline-block; }
   .post-author{ display:flex; align-items:center; gap:12px; margin-bottom:11px; }
   .post-avatar{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex:none; background:var(--primary-tint); color:var(--primary-light); }
   .post-author-name{ font-family:var(--font-sans); font-weight:700; font-size:15px; color:var(--ink); }
@@ -260,7 +263,7 @@
   .carousel-dots .dot.active{ background:var(--primary); transform:scale(1.25); }
 
   .post-actions{ display:flex; gap:4px; padding-top:12px; border-top:1px solid var(--line); }
-  .post-action-btn{ flex:1; display:flex; align-items:center; justify-content:center; gap:7px; background:none; border:none; border-radius:10px; padding:9px; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); cursor:pointer; transition:transform .12s ease; }
+  .post-action-btn{ flex:1; display:flex; align-items:center; justify-content:center; gap:7px; background:none; border:none; border-radius:10px; padding:9px; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); cursor:pointer; transition:transform .12s var(--ease-out); }
   .post-action-btn.liked{ color:var(--primary-light); }
   .post-action-btn:active{ transform:scale(.94); }
   .comment-box{ margin-top:12px; }
@@ -269,7 +272,7 @@
   .share-modal{ position:fixed; inset:0; background:rgba(6,4,3,.96); z-index:60; display:none; flex-direction:column; animation:modalfade .22s var(--ease-out) both; }
   .share-modal.active{ display:flex; }
   .share-modal-header{ display:flex; align-items:center; justify-content:space-between; padding:calc(16px + env(safe-area-inset-top, 0px)) 18px 8px; flex:none; }
-  .share-close{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; color:#fff; cursor:pointer; border:none; transition:transform .12s ease; }
+  .share-close{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; color:#fff; cursor:pointer; border:none; transition:transform .12s var(--ease-out); }
   .share-close:active{ transform:scale(.9); }
   .share-modal-title{ font-family:var(--font-sans); font-weight:700; font-size:16px; color:#fff; }
   .share-modal-spacer{ width:34px; }
@@ -289,9 +292,11 @@
   .share-preview .wm span{ color:var(--primary-light); }
 
   .share-fallback-row{ display:flex; gap:10px; padding:14px 24px calc(28px + env(safe-area-inset-bottom, 0px)); flex:none; }
-  .share-fallback-row button{ flex:1; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#fff; font-family:var(--font-sans); font-weight:600; font-size:13px; border-radius:100px; padding:12px; cursor:pointer; transition:transform .12s ease; }
+  .share-fallback-row button{ flex:1; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#fff; font-family:var(--font-sans); font-weight:600; font-size:13px; border-radius:100px; padding:12px; cursor:pointer; transition:transform .12s var(--ease-out); }
   .share-fallback-row button:active{ transform:scale(.96); }
   .comment-row{ display:flex; gap:8px; font-size:12.5px; color:var(--muted); padding:6px 2px; }
+  .comment-row-enter{ opacity:0; transform:translateY(4px); transition:opacity 220ms var(--ease-out), transform 220ms var(--ease-out); }
+  .comment-row-enter.comment-row-in{ opacity:1; transform:none; }
   .comment-row b{ color:var(--ink); }
   .comment-input-row{ display:flex; gap:8px; margin-top:10px; }
   .comment-input-row input{ flex:1; background:var(--surface2); border:1px solid transparent; border-radius:100px; padding:9px 14px; color:var(--ink); font-family:var(--font-sans); font-size:16px; caret-color:var(--primary); }
@@ -300,7 +305,7 @@
 
   /* ---- feed / profile top bars ---- */
   .top-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-  .icon-circle{ width:38px; height:38px; border-radius:50%; background:var(--surface2); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink); transition:transform .12s ease; }
+  .icon-circle{ width:38px; height:38px; border-radius:50%; background:var(--surface2); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink); transition:transform .12s var(--ease-out); }
   .icon-circle:active{ transform:scale(.92); }
 
   /* ---- profile header ---- */
@@ -311,12 +316,12 @@
   .follow-row{ color:var(--muted); font-size:14px; margin:13px 0 16px; }
   .follow-row b{ color:var(--ink); }
   .profile-actions{ display:flex; gap:10px; margin-bottom:16px; }
-  .profile-actions button{ flex:1; background:transparent; border:1px solid var(--line); color:var(--ink); font-family:var(--font-sans); font-weight:600; font-size:13.5px; border-radius:100px; padding:11px; cursor:pointer; transition:transform .12s ease; }
+  .profile-actions button{ flex:1; background:transparent; border:1px solid var(--line); color:var(--ink); font-family:var(--font-sans); font-weight:600; font-size:13.5px; border-radius:100px; padding:11px; cursor:pointer; transition:transform .12s var(--ease-out); }
   .profile-actions button:active{ transform:scale(.96); background:var(--surface2); }
   .theme-switcher{ display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
   .theme-switcher-label{ font-size:13px; color:var(--muted); font-weight:600; }
   .theme-switcher-control{ display:flex; background:var(--surface2); border-radius:100px; padding:3px; gap:2px; }
-  .theme-opt{ display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--muted); font-family:var(--font-sans); font-weight:600; font-size:12.5px; padding:7px 13px; border-radius:100px; cursor:pointer; transition:transform .12s ease; }
+  .theme-opt{ display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--muted); font-family:var(--font-sans); font-weight:600; font-size:12.5px; padding:7px 13px; border-radius:100px; cursor:pointer; transition:transform .12s var(--ease-out); }
   .theme-opt.active{ background:var(--surface); color:var(--ink); }
   .theme-opt:active{ transform:scale(.94); }
   .divider{ height:1px; background:var(--line); margin:0 0 22px; }
@@ -331,18 +336,19 @@
   .user-meta{ flex:1; }
   .user-name{ font-family:var(--font-sans); font-weight:700; font-size:14.5px; color:var(--ink); }
   .user-handle{ color:var(--muted); font-size:12px; margin-top:2px; }
-  .btn-request{ background:var(--primary-dim); color:#fff; border:none; font-family:var(--font-sans); font-weight:700; font-size:12.5px; border-radius:100px; padding:8px 16px; white-space:nowrap; cursor:pointer; transition:transform .12s ease; }
+  .btn-request{ background:var(--primary-dim); color:#fff; border:none; font-family:var(--font-sans); font-weight:700; font-size:12.5px; border-radius:100px; padding:8px 16px; white-space:nowrap; cursor:pointer; transition:transform .12s var(--ease-out), filter 160ms var(--ease-out), opacity 160ms var(--ease-out); }
   .btn-request:active{ transform:scale(.94); }
   .btn-requested{ background:transparent; color:var(--muted); border:1px solid var(--line); font-family:var(--font-sans); font-weight:600; font-size:12.5px; border-radius:100px; padding:8px 16px; white-space:nowrap; }
-  .btn-following{ background:var(--primary-tint); color:var(--primary-light); border:none; font-family:var(--font-sans); font-weight:600; font-size:12.5px; border-radius:100px; padding:8px 16px; white-space:nowrap; }
+  .btn-following{ background:var(--primary-tint); color:var(--primary-light); border:none; font-family:var(--font-sans); font-weight:600; font-size:12.5px; border-radius:100px; padding:8px 16px; white-space:nowrap; cursor:pointer; transition:filter 160ms var(--ease-out), opacity 160ms var(--ease-out); }
+  .btn-morphing{ filter:blur(3px); opacity:.45; }
   /* ---- bottom nav (3 items) ---- */
   .bottom-nav{ position:fixed; bottom:0; left:0; right:0; display:flex; justify-content:center; z-index:40; background:var(--surface); border-top:1px solid var(--line); }
   .bottom-nav-inner{ width:100%; max-width:430px; display:flex; justify-content:space-around; align-items:center; padding:10px 10px calc(20px + env(safe-area-inset-bottom, 0px)); }
-  .nav-item{ display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--muted); font-size:10.5px; cursor:pointer; background:none; border:none; font-family:var(--font-sans); font-weight:500; transition:transform .12s ease; }
+  .nav-item{ display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--muted); font-size:10.5px; cursor:pointer; background:none; border:none; font-family:var(--font-sans); font-weight:500; transition:transform .12s var(--ease-out); }
   .nav-item.active{ color:var(--ink); }
   .nav-item .ic{ font-size:19px; }
   .nav-item:active{ transform:scale(.92); }
-  .nav-record{ width:52px; height:52px; border-radius:50%; background:var(--primary-dim); display:flex; align-items:center; justify-content:center; font-size:24px; margin-top:-22px; border:4px solid var(--surface); color:#fff; cursor:pointer; transition:transform .12s ease; }
+  .nav-record{ width:52px; height:52px; border-radius:50%; background:var(--primary-dim); display:flex; align-items:center; justify-content:center; font-size:24px; margin-top:-22px; border:4px solid var(--surface); color:#fff; cursor:pointer; transition:transform .12s var(--ease-out); }
   .nav-record:active{ transform:scale(.9); }
 
   @media (max-width:360px){ .timer{font-size:42px;} .start-ring{width:150px;height:150px;} }
@@ -1662,8 +1668,12 @@ function renderPostCard(event, authorName, opts){
   const avatarStyle = avatarSrc ? `style="background-image:url(${avatarSrc}); background-size:cover; background-position:center;"` : '';
   const avatarContent = avatarSrc ? '' : ICON_PERSON;
 
+  // Stagger the first few cards on entry (group-entrance opportunity); cap
+  // the delay so a long feed doesn't feel slow to finish appearing, and
+  // never delay past a handful of cards.
+  const enterDelay = Math.min(opts.index || 0, 5) * 45;
   const html = `
-    <div class="post-card" data-event-id="${event.id}">
+    <div class="post-card" data-event-id="${event.id}" style="animation-delay:${enterDelay}ms;">
       <div class="post-author">
         <div class="post-avatar" ${avatarStyle}>${avatarContent}</div>
         <div><div class="post-author-name">${escapeHtml(authorName)}</div><div class="post-meta">${dateStr}</div></div>
@@ -1679,7 +1689,7 @@ function renderPostCard(event, authorName, opts){
       <div class="carousel-dots" id="${uid}-dots">${dots}</div>
       <div class="post-actions">
         <button class="post-action-btn ${event.cheered?'liked':''}" id="${uid}-cheers" onclick="toggleCheers('${event.id}', '${uid}')">
-          🥂 Cheers <span>(${event.cheersCount})</span>
+          <span class="cheers-emoji">🥂</span> Cheers <span>(${event.cheersCount})</span>
         </button>
         <button class="post-action-btn" id="${uid}-commentbtn" onclick="toggleComments('${event.id}', '${uid}')">${ICON_COMMENT} Comment <span>(${event.commentsCount})</span></button>
         <button class="post-action-btn" onclick="openShare('${event.id}')">${ICON_SHARE} Share</button>
@@ -1748,7 +1758,10 @@ async function toggleCheers(eventId, uid){
   ev.cheersCount += ev.cheered ? 1 : -1;
   const btn = document.getElementById(`${uid}-cheers`);
   btn.classList.toggle('liked', ev.cheered);
-  btn.innerHTML = `🥂 Cheers <span>(${ev.cheersCount})</span>`;
+  btn.innerHTML = `<span class="cheers-emoji">🥂</span> Cheers <span>(${ev.cheersCount})</span>`;
+  // Only pop on the way to cheered, not on the way off — celebrating an
+  // add without also "punishing" a remove with the same motion.
+  if(ev.cheered) popCheersEmoji(btn);
 
   const { error } = wasCheered
     ? await sb.from('cheers').delete().eq('event_id', eventId).eq('user_id', currentUser.id)
@@ -1758,8 +1771,15 @@ async function toggleCheers(eventId, uid){
     ev.cheered = wasCheered;
     ev.cheersCount += wasCheered ? 1 : -1;
     btn.classList.toggle('liked', ev.cheered);
-    btn.innerHTML = `🥂 Cheers <span>(${ev.cheersCount})</span>`;
+    btn.innerHTML = `<span class="cheers-emoji">🥂</span> Cheers <span>(${ev.cheersCount})</span>`;
   }
+}
+function popCheersEmoji(btn){
+  const el = btn.querySelector('.cheers-emoji');
+  if(!el) return;
+  el.style.animation = 'none';
+  void el.offsetWidth; // force reflow so the animation restarts even if it just ran
+  el.style.animation = 'cheerspop 320ms var(--ease-out)';
 }
 
 async function toggleComments(eventId, uid){
@@ -1775,7 +1795,7 @@ async function renderComments(eventId, uid){
     .eq('event_id', eventId).order('created_at', { ascending: true });
   if(error){ list.innerHTML = `<div class="comment-row" style="color:var(--muted);">Couldn't load comments.</div>`; return; }
   list.innerHTML = !data || data.length === 0
-    ? `<div class="comment-row" style="color:var(--muted);">No comments yet.</div>`
+    ? `<div class="comment-row comment-empty" style="color:var(--muted);">No comments yet.</div>`
     : data.map(c => `<div class="comment-row"><b>${escapeHtml(c.profiles ? c.profiles.display_name : 'Someone')}</b>&nbsp;${escapeHtml(c.body)}</div>`).join('');
 }
 async function submitComment(eventId, uid){
@@ -1789,7 +1809,22 @@ async function submitComment(eventId, uid){
   if(error){ showToast("Couldn't post that comment. " + error.message); return; }
   if(ev) ev.commentsCount = (ev.commentsCount || 0) + 1;
   document.getElementById(`${uid}-commentbtn`).innerHTML = `${ICON_COMMENT} Comment <span>(${ev ? ev.commentsCount : ''})</span>`;
-  await renderComments(eventId, uid);
+  // Append just the new row instead of re-querying and re-rendering the
+  // whole comment list — the comment the person just typed doesn't need
+  // a network round trip to know it's there, and it gets a real entrance
+  // instead of teleporting in with the rest of the list.
+  appendCommentRow(uid, currentUser.name, text);
+}
+function appendCommentRow(uid, authorName, text){
+  const list = document.getElementById(`${uid}-comment-list`);
+  if(!list) return;
+  const empty = list.querySelector('.comment-empty');
+  if(empty) empty.remove();
+  const row = document.createElement('div');
+  row.className = 'comment-row comment-row-enter';
+  row.innerHTML = `<b>${escapeHtml(authorName)}</b>&nbsp;${escapeHtml(text)}`;
+  list.appendChild(row);
+  requestAnimationFrame(() => row.classList.add('comment-row-in'));
 }
 
 // ---------------------------------------------------------------
@@ -1831,7 +1866,7 @@ async function renderFeed(){
     return;
   }
   body.innerHTML = '';
-  events.forEach(ev => mountPostCard(body, ev, ev.author ? ev.author.name : 'Someone', { editable:false }));
+  events.forEach((ev, i) => mountPostCard(body, ev, ev.author ? ev.author.name : 'Someone', { editable:false, index:i }));
 }
 
 // ---------------------------------------------------------------
@@ -1873,7 +1908,7 @@ async function renderYou(){
     return;
   }
   body.innerHTML = '';
-  events.forEach(ev => mountPostCard(body, ev, name, { editable:true }));
+  events.forEach((ev, i) => mountPostCard(body, ev, name, { editable:true, index:i }));
 }
 
 // ---------------------------------------------------------------
@@ -1911,15 +1946,32 @@ async function followUser(id){
   if(!currentUser) return;
   const { error } = await sb.from('follows').insert({ follower_id: currentUser.id, following_id: id });
   if(error){ showToast("Couldn't follow. " + error.message); return; }
-  await renderUsernameResults();
+  morphFollowButton(id, true);
   renderFeed();
 }
 async function unfollowUser(id){
   if(!currentUser) return;
   const { error } = await sb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', id);
   if(error){ showToast("Couldn't unfollow. " + error.message); return; }
-  await renderUsernameResults();
+  morphFollowButton(id, false);
   renderFeed();
+}
+// Swap just the one row's button in place instead of re-querying and
+// re-rendering the entire search-results list for a single state change
+// (state indication should be immediate, not wait on two network round
+// trips) — blur-crossfades the swap so it doesn't just snap.
+function morphFollowButton(id, isFollowing){
+  const row = document.getElementById(`user-row-${id}`);
+  const btn = row && row.querySelector('.btn-request, .btn-following');
+  if(!btn) return;
+  btn.classList.add('btn-morphing');
+  setTimeout(() => {
+    btn.outerHTML = isFollowing
+      ? `<button class="btn-following btn-morphing" onclick="unfollowUser('${id}')">Following</button>`
+      : `<button class="btn-request btn-morphing" onclick="followUser('${id}')">Follow</button>`;
+    const fresh = row.querySelector('.btn-following, .btn-request');
+    requestAnimationFrame(() => { if(fresh) fresh.classList.remove('btn-morphing'); });
+  }, 130);
 }
 
 function inviteAll(){
