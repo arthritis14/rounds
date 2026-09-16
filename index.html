@@ -94,7 +94,7 @@
 
   /* ---- mode select: clean list rows ---- */
   #screen-setup.active{ display:flex; flex-direction:column; }
-  .mode-cards-wrap{ flex:1; display:flex; flex-direction:column; justify-content:center; }
+  .setup-content{ flex:1; display:flex; flex-direction:column; justify-content:center; }
   .mode-card{ display:flex; align-items:center; gap:14px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:12px; cursor:pointer; }
   .mode-card:active{ opacity:.7; }
   .mode-glyph{ width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; background:var(--primary); }
@@ -389,8 +389,8 @@
   <!-- SETUP -->
   <section id="screen-setup" class="screen no-nav">
     <a class="back-link" onclick="cancelNewEvent()">&larr; Cancel</a>
+    <div class="setup-content">
     <h1>What are we<br/>tracking tonight?</h1>
-    <div class="mode-cards-wrap">
     <div class="mode-card" onclick="selectMode('beer')">
       <div class="mode-glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h10v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8z"/><path d="M16 10h1.5a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H16"/><path d="M6 8l.7-3.2A1 1 0 0 1 7.7 4h6.6a1 1 0 0 1 1 .8L16 8"/><line x1="8" y1="12" x2="14" y2="12"/></svg></div>
       <div class="mode-text"><div class="t">Beer</div></div>
@@ -830,7 +830,7 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   const padL = opts.padL ?? 26, padR = opts.padR ?? 10, padT = opts.padT ?? 12, padB = opts.padB ?? 22;
   const innerW = w-padL-padR, innerH = h-padT-padB;
   const maxCount = Math.max(1, entries.length);
-  const dur = Math.max(60000, endTime-startTime);
+  const dur = Math.max(1000, endTime-startTime);
   const xScale = t => padL + ((t-startTime)/dur)*innerW;
   const yScale = c => padT + innerH - (c/maxCount)*innerH;
   const sorted = [...entries].sort((a,b)=>a.time-b.time);
