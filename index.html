@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
+<meta name="theme-color" id="meta-theme-color" content="#111111" />
+<meta name="color-scheme" content="light dark" />
 <title>Rounds</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,6 +19,10 @@
     --radius:16px;
     --font-sans:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-display:'Anton', -apple-system, BlinkMacSystemFont, sans-serif;
+    /* Shared easing so anything new (toasts, sheets) moves with the same
+       feel instead of the browser's weak built-in curves. */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   }
   body[data-rounds-theme="light"]{
     --bg:#FAFAFA; --surface:#FFFFFF; --surface2:#F1F1F1;
@@ -24,7 +30,14 @@
     --ink:#111111; --muted:#71717A; --line:#E5E5E5; --danger:#D64832;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0;padding:0; overscroll-behavior:none;}
+  html{ -webkit-tap-highlight-color:transparent; -webkit-text-size-adjust:100%; }
+  /* Every onclick-driven control in this app is a div/span/button acting
+     as a button — kill the 300ms tap delay and the long-press text-select
+     callout on all of them in one place instead of per-component. */
+  button, [onclick]{
+    touch-action:manipulation; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+  }
   svg{ display:block; flex:none; }
   /* Browser-supplied surfaces, themed rather than left at OS defaults. */
   ::selection{ background:var(--primary-tint); color:var(--ink); }
@@ -35,12 +48,12 @@
   .brand-logo.lg{ height:34px; }
   body{
     background:var(--bg);
-    color:var(--ink); font-family:var(--font-sans); min-height:100vh;
+    color:var(--ink); font-family:var(--font-sans); min-height:100dvh;
     display:flex; justify-content:center; -webkit-font-smoothing:antialiased;
     transition:background .2s ease, color .2s ease;
   }
-  .phone{ width:100%; max-width:430px; min-height:100vh; position:relative; overflow-x:hidden; background:var(--surface); }
-  .screen{ display:none; padding:22px 20px 100px; animation:fadein .25s ease both; min-height:100vh; }
+  .phone{ width:100%; max-width:430px; min-height:100dvh; position:relative; overflow-x:hidden; background:var(--surface); }
+  .screen{ display:none; padding:calc(22px + env(safe-area-inset-top, 0px)) 20px 100px; animation:fadein .25s var(--ease-out) both; min-height:100dvh; }
   .screen.active{ display:block; }
   .screen.no-nav{ padding-bottom:24px; }
   @keyframes fadein{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
@@ -63,7 +76,7 @@
   .btn + .btn{ margin-top:10px; }
   .text-input, .text-area{
     width:100%; background:var(--surface2); border:1px solid transparent; border-radius:12px;
-    color:var(--ink); font-family:var(--font-sans); font-size:15px; padding:14px 16px; margin-bottom:12px;
+    color:var(--ink); font-family:var(--font-sans); font-size:16px; padding:14px 16px; margin-bottom:12px;
     caret-color:var(--primary);
   }
   .text-input:focus, .text-area:focus{ outline:none; border-color:var(--primary); background:var(--surface); }
@@ -101,13 +114,47 @@
   }
 
   /* ---- avatar crop/zoom modal ---- */
-  .crop-modal{ position:fixed; inset:0; z-index:200; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.88); padding:24px; }
+  @keyframes modalfade{ from{ opacity:0; transform:scale(.97); } to{ opacity:1; transform:none; } }
+  .crop-modal{ position:fixed; inset:0; z-index:200; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.88); padding:24px; animation:modalfade .22s var(--ease-out) both; }
   .crop-modal.show{ display:flex; }
   .crop-modal-inner{ display:flex; flex-direction:column; align-items:center; gap:22px; width:100%; max-width:320px; }
   .crop-modal-title{ color:var(--ink); font-family:var(--font-sans); font-weight:700; font-size:15px; text-align:center; }
   .crop-viewport{ position:relative; width:280px; height:280px; max-width:78vw; max-height:78vw; overflow:hidden; border-radius:16px; background:#000; touch-action:none; cursor:grab; }
   .crop-viewport:active{ cursor:grabbing; }
   .crop-viewport img{ position:absolute; left:0; top:0; max-width:none; user-select:none; -webkit-user-drag:none; pointer-events:none; }
+
+  /* ---- toast + confirm sheet: in-app replacements for the browser's
+     alert()/confirm(), which are the loudest "this is a website, not
+     an app" tell — they're unstyled, block the whole page, and can't
+     match the rest of the UI. ---- */
+  .toast-stack{
+    position:fixed; left:0; right:0; bottom:calc(90px + env(safe-area-inset-bottom, 0px));
+    z-index:300; display:flex; flex-direction:column; align-items:center; gap:8px;
+    padding:0 20px; pointer-events:none;
+  }
+  .toast{
+    max-width:390px; width:100%; background:var(--surface2); color:var(--ink); border:1px solid var(--line);
+    border-radius:14px; padding:12px 16px; font-family:var(--font-sans); font-size:13.5px; font-weight:500;
+    line-height:1.4; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,.28);
+    opacity:0; transform:translateY(8px) scale(.97);
+    transition:opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+  }
+  .toast.show{ opacity:1; transform:translateY(0) scale(1); }
+  .confirm-sheet-backdrop{
+    position:fixed; inset:0; z-index:250; background:rgba(0,0,0,.5); display:none;
+    align-items:flex-end; justify-content:center; opacity:0; transition:opacity 200ms var(--ease-out);
+  }
+  .confirm-sheet-backdrop.show{ display:flex; opacity:1; }
+  .confirm-sheet{
+    width:100%; max-width:430px; background:var(--surface); border-radius:20px 20px 0 0;
+    padding:22px 20px calc(22px + env(safe-area-inset-bottom, 0px));
+    transform:translateY(100%); transition:transform 260ms var(--ease-drawer);
+  }
+  .confirm-sheet-backdrop.show .confirm-sheet{ transform:translateY(0); }
+  .confirm-sheet-title{ font-family:var(--font-sans); font-weight:700; font-size:16px; color:var(--ink); margin-bottom:6px; }
+  .confirm-sheet-body{ font-family:var(--font-sans); font-size:13.5px; color:var(--muted); line-height:1.5; margin-bottom:20px; }
+  .confirm-sheet-actions{ display:flex; gap:10px; }
+  .confirm-sheet-actions .btn{ margin-top:0; }
   .crop-mask{ position:absolute; inset:0; border-radius:50%; box-shadow:0 0 0 9999px rgba(0,0,0,.7); pointer-events:none; border:1.5px solid rgba(255,255,255,.85); }
   .crop-zoom-row{ display:flex; align-items:center; gap:12px; width:100%; color:var(--muted); }
   .crop-zoom-row input[type=range]{ flex:1; accent-color:var(--primary-dim); }
@@ -219,15 +266,15 @@
   .comment-box{ margin-top:12px; }
 
   /* ---- share modal (kept dark — matches Strava's own dark, photo-overlay share export, in both themes) ---- */
-  .share-modal{ position:fixed; inset:0; background:rgba(6,4,3,.96); z-index:60; display:none; flex-direction:column; }
+  .share-modal{ position:fixed; inset:0; background:rgba(6,4,3,.96); z-index:60; display:none; flex-direction:column; animation:modalfade .22s var(--ease-out) both; }
   .share-modal.active{ display:flex; }
-  .share-modal-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px 8px; flex:none; }
+  .share-modal-header{ display:flex; align-items:center; justify-content:space-between; padding:calc(16px + env(safe-area-inset-top, 0px)) 18px 8px; flex:none; }
   .share-close{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; color:#fff; cursor:pointer; border:none; transition:transform .12s ease; }
   .share-close:active{ transform:scale(.9); }
   .share-modal-title{ font-family:var(--font-sans); font-weight:700; font-size:16px; color:#fff; }
   .share-modal-spacer{ width:34px; }
 
-  .share-preview-scroll{ flex:1; overflow-y:auto; display:flex; flex-direction:column; align-items:center; padding:6px 24px 0; }
+  .share-preview-scroll{ flex:1; overflow-y:auto; overscroll-behavior:contain; display:flex; flex-direction:column; align-items:center; padding:6px 24px 0; }
   .share-preview-outer{
     width:100%; max-width:260px; aspect-ratio:9/16; border-radius:20px; overflow:hidden;
     background:repeating-conic-gradient(#2c2c2c 0% 25%, #1a1a1a 0% 50%) 50% / 22px 22px;
@@ -241,13 +288,13 @@
   .share-preview .wm{ position:absolute; z-index:2; bottom:16px; left:0; right:0; text-align:center; font-family:var(--font-sans); font-weight:800; font-size:14px; letter-spacing:.14em; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.6); }
   .share-preview .wm span{ color:var(--primary-light); }
 
-  .share-fallback-row{ display:flex; gap:10px; padding:14px 24px 28px; flex:none; }
+  .share-fallback-row{ display:flex; gap:10px; padding:14px 24px calc(28px + env(safe-area-inset-bottom, 0px)); flex:none; }
   .share-fallback-row button{ flex:1; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#fff; font-family:var(--font-sans); font-weight:600; font-size:13px; border-radius:100px; padding:12px; cursor:pointer; transition:transform .12s ease; }
   .share-fallback-row button:active{ transform:scale(.96); }
   .comment-row{ display:flex; gap:8px; font-size:12.5px; color:var(--muted); padding:6px 2px; }
   .comment-row b{ color:var(--ink); }
   .comment-input-row{ display:flex; gap:8px; margin-top:10px; }
-  .comment-input-row input{ flex:1; background:var(--surface2); border:1px solid transparent; border-radius:100px; padding:9px 14px; color:var(--ink); font-family:var(--font-sans); font-size:12.5px; caret-color:var(--primary); }
+  .comment-input-row input{ flex:1; background:var(--surface2); border:1px solid transparent; border-radius:100px; padding:9px 14px; color:var(--ink); font-family:var(--font-sans); font-size:16px; caret-color:var(--primary); }
   .comment-input-row input:focus{ outline:none; border-color:var(--primary); }
   .comment-send{ background:var(--primary-dim); color:#fff; border:none; border-radius:100px; padding:0 16px; font-weight:700; font-size:12.5px; }
 
@@ -277,7 +324,7 @@
   /* ---- find friends ---- */
   .search-box{ display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid transparent; border-radius:100px; padding:12px 16px; margin-bottom:8px; color:var(--muted); }
   .search-box:focus-within{ border-color:var(--primary); }
-  .search-box input{ flex:1; background:none; border:none; outline:none; color:var(--ink); font-family:var(--font-sans); font-size:14.5px; caret-color:var(--primary); }
+  .search-box input{ flex:1; background:none; border:none; outline:none; color:var(--ink); font-family:var(--font-sans); font-size:16px; caret-color:var(--primary); }
   .search-box input::placeholder{ color:var(--muted); }
   .user-row{ display:flex; align-items:center; gap:12px; padding:11px 2px; }
   .user-avatar{ width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:17px; flex:none; background:var(--primary-tint); color:var(--primary-light); }
@@ -290,7 +337,7 @@
   .btn-following{ background:var(--primary-tint); color:var(--primary-light); border:none; font-family:var(--font-sans); font-weight:600; font-size:12.5px; border-radius:100px; padding:8px 16px; white-space:nowrap; }
   /* ---- bottom nav (3 items) ---- */
   .bottom-nav{ position:fixed; bottom:0; left:0; right:0; display:flex; justify-content:center; z-index:40; background:var(--surface); border-top:1px solid var(--line); }
-  .bottom-nav-inner{ width:100%; max-width:430px; display:flex; justify-content:space-around; align-items:center; padding:10px 10px 20px; }
+  .bottom-nav-inner{ width:100%; max-width:430px; display:flex; justify-content:space-around; align-items:center; padding:10px 10px calc(20px + env(safe-area-inset-bottom, 0px)); }
   .nav-item{ display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--muted); font-size:10.5px; cursor:pointer; background:none; border:none; font-family:var(--font-sans); font-weight:500; transition:transform .12s ease; }
   .nav-item.active{ color:var(--ink); }
   .nav-item .ic{ font-size:19px; }
@@ -299,6 +346,15 @@
   .nav-record:active{ transform:scale(.9); }
 
   @media (max-width:360px){ .timer{font-size:42px;} .start-ring{width:150px;height:150px;} }
+
+  /* Reduced motion: keep opacity/state changes (they aid comprehension),
+     drop everything else down to effectively instant. */
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration:0.01ms !important; animation-iteration-count:1 !important;
+      transition-duration:0.01ms !important; scroll-behavior:auto !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -564,6 +620,21 @@
   </div>
 </div>
 
+<!-- TOAST — replaces alert() for non-blocking status messages -->
+<div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+<!-- CONFIRM SHEET — replaces confirm() for destructive/blocking choices -->
+<div class="confirm-sheet-backdrop" id="confirm-sheet-backdrop">
+  <div class="confirm-sheet">
+    <div class="confirm-sheet-title" id="confirm-sheet-title"></div>
+    <div class="confirm-sheet-body" id="confirm-sheet-body"></div>
+    <div class="confirm-sheet-actions">
+      <button class="btn btn-ghost" id="confirm-sheet-cancel">Cancel</button>
+      <button class="btn btn-danger" id="confirm-sheet-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // =================================================================
 // BACKEND — real Supabase project (Postgres + Auth + Storage).
@@ -606,6 +677,50 @@ const ICON_IMAGE = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" 
 const ICON_PLUS = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"></line><line x1="4" y1="12" x2="20" y2="12"></line></svg>';
 const ICON_COMMENT = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 3.5v-3.5H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"></path></svg>';
 const ICON_SHARE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7.5 7.5L12 3l4.5 4.5"></path><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path></svg>';
+
+// ---------------------------------------------------------------
+// TOAST + CONFIRM SHEET — in-app replacements for alert()/confirm().
+// Browser alert/confirm are the loudest "this is a website" tell on
+// mobile: unstyled OS chrome, blocks the whole page, can't be themed.
+// These mount into the toast-stack / confirm-sheet-backdrop elements
+// declared once in the HTML, right before the crop modal's close tag.
+// ---------------------------------------------------------------
+let toastHideTimer = null;
+function showToast(message, ms = 2600){
+  const stack = document.getElementById('toast-stack');
+  if(!stack) return;
+  stack.innerHTML = '';
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = message;
+  stack.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  clearTimeout(toastHideTimer);
+  toastHideTimer = setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => { if(el.parentNode) el.parentNode.removeChild(el); }, 220);
+  }, ms);
+}
+function showConfirm(title, body, confirmLabel){
+  return new Promise((resolve) => {
+    const backdrop = document.getElementById('confirm-sheet-backdrop');
+    document.getElementById('confirm-sheet-title').textContent = title;
+    document.getElementById('confirm-sheet-body').textContent = body;
+    const confirmBtn = document.getElementById('confirm-sheet-confirm');
+    const cancelBtn = document.getElementById('confirm-sheet-cancel');
+    confirmBtn.textContent = confirmLabel || 'Confirm';
+    const finish = (result) => {
+      backdrop.classList.remove('show');
+      confirmBtn.onclick = null; cancelBtn.onclick = null; backdrop.onclick = null;
+      resolve(result);
+    };
+    confirmBtn.onclick = () => finish(true);
+    cancelBtn.onclick = () => finish(false);
+    backdrop.onclick = (e) => { if(e.target === backdrop) finish(false); };
+    backdrop.classList.add('show');
+  });
+}
+
 // ---------------------------------------------------------------
 // THEME — dark by default (the look everyone preferred); light is
 // an opt-in switch in the You tab. Persisted per-device only.
@@ -619,6 +734,10 @@ function setTheme(theme){
     darkBtn.classList.toggle('active', theme === 'dark');
     lightBtn.classList.toggle('active', theme === 'light');
   }
+  // Status bar / browser chrome follows the in-app theme choice, not the
+  // OS setting — this app switches by a data attribute, not prefers-color-scheme.
+  const metaTheme = document.getElementById('meta-theme-color');
+  if(metaTheme) metaTheme.setAttribute('content', theme === 'light' ? '#FAFAFA' : '#111111');
 }
 function initTheme(){
   let saved = 'dark';
@@ -665,7 +784,7 @@ async function continueWithGoogle(btn){
   if(error){
     btn.disabled = false;
     label.textContent = 'Continue with Google';
-    alert('Could not start Google sign-in: ' + error.message);
+    showToast('Could not start Google sign-in: ' + error.message);
   }
   // on success the browser navigates to Google and back; onAuthStateChange
   // picks the session up when it returns.
@@ -1126,7 +1245,8 @@ async function copyProfileMessage(btnEl){
 }
 
 async function logout(){
-  if(!confirm('Log out of Rounds?')) return;
+  const ok = await showConfirm('Log out of Rounds?', 'You can log back in anytime with the same account.', 'Log out');
+  if(!ok) return;
   await sb.auth.signOut();
   currentUser = null;
   signupPhoto = null;
@@ -1473,7 +1593,7 @@ async function publishEvent(){
 
     await goToYou();
   }catch(err){
-    alert("Couldn't post that. " + (err.message || 'Check your connection and try again.'));
+    showToast("Couldn't post that. " + (err.message || 'Check your connection and try again.'), 3400);
   }finally{
     btn.disabled = false; btn.textContent = originalLabel;
   }
@@ -1666,7 +1786,7 @@ async function submitComment(eventId, uid){
   if(!text) return;
   input.value = '';
   const { error } = await sb.from('comments').insert({ event_id: eventId, user_id: currentUser.id, body: text });
-  if(error){ alert("Couldn't post that comment. " + error.message); return; }
+  if(error){ showToast("Couldn't post that comment. " + error.message); return; }
   if(ev) ev.commentsCount = (ev.commentsCount || 0) + 1;
   document.getElementById(`${uid}-commentbtn`).innerHTML = `${ICON_COMMENT} Comment <span>(${ev ? ev.commentsCount : ''})</span>`;
   await renderComments(eventId, uid);
@@ -1790,14 +1910,14 @@ function userRowHtml(d, followingSet){
 async function followUser(id){
   if(!currentUser) return;
   const { error } = await sb.from('follows').insert({ follower_id: currentUser.id, following_id: id });
-  if(error){ alert("Couldn't follow. " + error.message); return; }
+  if(error){ showToast("Couldn't follow. " + error.message); return; }
   await renderUsernameResults();
   renderFeed();
 }
 async function unfollowUser(id){
   if(!currentUser) return;
   const { error } = await sb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', id);
-  if(error){ alert("Couldn't unfollow. " + error.message); return; }
+  if(error){ showToast("Couldn't unfollow. " + error.message); return; }
   await renderUsernameResults();
   renderFeed();
 }
@@ -1805,7 +1925,7 @@ async function unfollowUser(id){
 function inviteAll(){
   const message = `Hey! I've been logging nights out on Rounds, it's like Strava for drinks. Join me: ${window.location.origin}`;
   if(navigator.share){ navigator.share({ text: message }).catch(() => {}); }
-  else { copyTextToClipboard(message).then(ok => { if(ok) alert('Invite message copied.'); }); }
+  else { copyTextToClipboard(message).then(ok => { if(ok) showToast('Invite message copied.'); }); }
 }
 
 // ---------------------------------------------------------------
@@ -1875,7 +1995,7 @@ async function shareImage(){
 async function downloadShareImage(){
   const canvas = await generateShareCanvas();
   canvas.toBlob((blob) => {
-    if(!blob){ alert("Couldn't generate the image \u2014 try again."); return; }
+    if(!blob){ showToast("Couldn't generate the image \u2014 try again."); return; }
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.download = 'rounds-share.png';
@@ -1889,7 +2009,7 @@ async function downloadShareImage(){
     const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if(isIOS){
       window.open(url, '_blank');
-      alert('Long-press the image and choose "Save Image" to add it to your Photos.');
+      showToast('Long-press the image and choose "Save Image" to add it to your Photos.', 4200);
     }
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   }, 'image/png');
