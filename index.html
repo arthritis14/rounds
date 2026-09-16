@@ -119,6 +119,8 @@
   .field-success{ color:#3DBE6B; font-size:13px; margin:-4px 0 14px 4px; display:none; line-height:1.5; }
   .field-success.show{ display:block; }
   .field-hint{ color:var(--muted); font-size:12.5px; margin:-4px 0 14px 4px; line-height:1.5; }
+  .field-hint.ok{ color:#3DBE6B; }
+  .field-hint.bad{ color:var(--danger); }
 
   /* ---- mode select: clean list rows ---- */
   #screen-setup.active{ display:flex; flex-direction:column; }
@@ -335,6 +337,8 @@
     <input type="file" id="signup-photo-input" accept="image/*" />
 
     <input id="signup-name" class="text-input" placeholder="Full name" />
+    <input id="signup-username" class="text-input" placeholder="Username" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="onUsernameInput()" />
+    <div class="field-hint" id="signup-username-status">3-20 characters: lowercase letters, numbers, underscores. This is how friends with the same name tell you apart.</div>
     <input id="signup-email" class="text-input" type="email" placeholder="Email address" />
     <div class="field-error" id="signup-email-error">Enter a valid email address.</div>
     <input id="signup-password" class="text-input" type="password" placeholder="Password" />
@@ -398,6 +402,9 @@
     <input id="edit-name" class="text-input" placeholder="Full name" />
     <div class="field-error" id="edit-name-error">Enter a name.</div>
 
+    <input id="edit-username" class="text-input" placeholder="Username" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="onEditUsernameInput()" />
+    <div class="field-hint" id="edit-username-status">3-20 characters: lowercase letters, numbers, underscores.</div>
+
     <div id="edit-password-block">
       <input id="edit-password" class="text-input" type="password" placeholder="New password (leave blank to keep current)" />
       <input id="edit-password-confirm" class="text-input" type="password" placeholder="Confirm new password" />
@@ -426,9 +433,9 @@
     <a class="back-link" onclick="showScreen('screen-feed')">&larr; Back</a>
     <div class="wordmark">Find friends</div>
     <h1>Add people.</h1>
-    <p class="sub">Search a name to follow them. Their rounds show up in your feed right away.</p>
+    <p class="sub">Search a name or username to follow them. Their rounds show up in your feed right away.</p>
 
-    <div class="search-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.6" y2="16.6"></line></svg><input id="username-search" placeholder="Search by name" oninput="renderUsernameResults()" /></div>
+    <div class="search-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.6" y2="16.6"></line></svg><input id="username-search" placeholder="Search by name or username" oninput="renderUsernameResults()" /></div>
     <div id="username-results"></div>
 
     <div style="margin-top:22px;">
@@ -782,16 +789,73 @@ function toggleAuthMode(){
   document.getElementById('signup-wordmark').textContent = isLogin ? 'Log in' : 'Create account';
   document.getElementById('signup-heading').innerHTML = isLogin ? 'Welcome<br/>back.' : 'Set up your<br/>profile.';
   document.getElementById('signup-name').style.display = isLogin ? 'none' : '';
+  document.getElementById('signup-username').style.display = isLogin ? 'none' : '';
+  document.getElementById('signup-username-status').style.display = isLogin ? 'none' : '';
   document.getElementById('signup-avatar-picker').style.display = isLogin ? 'none' : '';
   document.getElementById('signup-submit-btn').textContent = isLogin ? 'Log in' : 'Create account';
   document.getElementById('auth-mode-toggle').textContent = isLogin ? "Don't have an account? Create one" : 'Already have an account? Log in';
   document.getElementById('signup-email-error').classList.remove('show');
   document.getElementById('signup-form-error').classList.remove('show');
   document.getElementById('signup-form-success').classList.remove('show');
+  resetUsernameStatus();
+}
+
+// ---------------------------------------------------------------
+// USERNAME — a real, user-chosen, unique handle (separate from display
+// name) so two people signing up as "Arth" are still distinguishable.
+// Format-checked client-side, live-checked against profiles.username, and
+// re-validated server-side (a DB check constraint + unique index) since a
+// client check alone can't fully close a race condition.
+// ---------------------------------------------------------------
+const USERNAME_HINT = '3-20 characters: lowercase letters, numbers, underscores. This is how friends with the same name tell you apart.';
+let usernameAvailable = false;
+let usernameCheckToken = 0;
+
+function resetUsernameStatus(){
+  usernameAvailable = false;
+  usernameCheckToken++;
+  const status = document.getElementById('signup-username-status');
+  status.textContent = USERNAME_HINT;
+  status.className = 'field-hint';
+}
+
+function onUsernameInput(){
+  const input = document.getElementById('signup-username');
+  const cursor = input.selectionStart;
+  if(input.value !== input.value.toLowerCase()){ input.value = input.value.toLowerCase(); input.setSelectionRange(cursor, cursor); }
+  const status = document.getElementById('signup-username-status');
+  const username = input.value.trim();
+  usernameAvailable = false;
+  const myToken = ++usernameCheckToken;
+
+  if(!username){ status.textContent = USERNAME_HINT; status.className = 'field-hint'; return; }
+  if(!/^[a-z0-9_]{3,20}$/.test(username)){
+    status.textContent = '3-20 characters: lowercase letters, numbers, underscores only.';
+    status.className = 'field-hint bad';
+    return;
+  }
+  status.textContent = 'Checking availability…';
+  status.className = 'field-hint';
+
+  setTimeout(async () => {
+    if(myToken !== usernameCheckToken) return; // a later keystroke superseded this check
+    const { data, error } = await sb.from('profiles').select('id').eq('username', username).maybeSingle();
+    if(myToken !== usernameCheckToken) return;
+    if(error){ status.textContent = "Couldn't check availability, try again."; status.className = 'field-hint bad'; return; }
+    if(data){
+      status.textContent = 'That username is taken.';
+      status.className = 'field-hint bad';
+    } else {
+      usernameAvailable = true;
+      status.textContent = 'Available.';
+      status.className = 'field-hint ok';
+    }
+  }, 450);
 }
 
 async function submitAuthForm(){
   const name = document.getElementById('signup-name').value.trim();
+  const username = document.getElementById('signup-username').value.trim();
   const email = document.getElementById('signup-email').value.trim();
   const password = document.getElementById('signup-password').value;
   const emailErr = document.getElementById('signup-email-error');
@@ -802,6 +866,10 @@ async function submitAuthForm(){
   const isLogin = authMode === 'login';
   if(!email || !password || (!isLogin && !name)){ formErr.textContent = 'Fill in your name, email and password to continue.'; formErr.classList.add('show'); return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ emailErr.classList.add('show'); return; }
+  if(!isLogin){
+    if(!/^[a-z0-9_]{3,20}$/.test(username)){ formErr.textContent = 'Pick a username: 3-20 characters, lowercase letters, numbers or underscores.'; formErr.classList.add('show'); return; }
+    if(!usernameAvailable){ formErr.textContent = "Check that your username is available before continuing."; formErr.classList.add('show'); return; }
+  }
 
   const btn = document.getElementById('signup-submit-btn');
   const originalLabel = btn.textContent;
@@ -813,9 +881,18 @@ async function submitAuthForm(){
     if(error){ formErr.textContent = error.message; formErr.classList.add('show'); return; }
     // onAuthStateChange takes it from here
   } else {
-    const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name } } });
+    const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name, username } } });
     btn.disabled = false; btn.textContent = originalLabel;
-    if(error){ formErr.textContent = error.message; formErr.classList.add('show'); return; }
+    if(error){
+      // The DB re-checks uniqueness too (belt-and-braces against a race between
+      // the live check above and another signup landing first) — surface that
+      // specific case in plain language rather than a raw Postgres error string.
+      formErr.textContent = /profiles_username|username/i.test(error.message) && /unique|duplicate/i.test(error.message)
+        ? 'That username was just taken, pick another.'
+        : error.message;
+      formErr.classList.add('show');
+      return;
+    }
     if(data.session){
       // no email confirmation required (or it's off) — we're signed in immediately.
       if(signupPhoto) uploadOwnAvatar(signupPhoto).catch(()=>{});
@@ -855,10 +932,64 @@ document.getElementById('edit-photo-input').addEventListener('change', (e) => {
   e.target.value = '';
 });
 
+const EDIT_USERNAME_HINT = '3-20 characters: lowercase letters, numbers, underscores.';
+let editUsernameAvailable = true; // true at rest: the pre-filled value is already theirs
+let editUsernameCheckToken = 0;
+
+function resetEditUsernameStatus(){
+  editUsernameAvailable = true;
+  editUsernameCheckToken++;
+  const status = document.getElementById('edit-username-status');
+  status.textContent = EDIT_USERNAME_HINT;
+  status.className = 'field-hint';
+}
+
+function onEditUsernameInput(){
+  const input = document.getElementById('edit-username');
+  const cursor = input.selectionStart;
+  if(input.value !== input.value.toLowerCase()){ input.value = input.value.toLowerCase(); input.setSelectionRange(cursor, cursor); }
+  const status = document.getElementById('edit-username-status');
+  const username = input.value.trim();
+  const myToken = ++editUsernameCheckToken;
+
+  if(username === (currentUser.username || '')){
+    editUsernameAvailable = true;
+    status.textContent = EDIT_USERNAME_HINT;
+    status.className = 'field-hint';
+    return;
+  }
+  editUsernameAvailable = false;
+  if(!username){ status.textContent = 'Pick a username.'; status.className = 'field-hint bad'; return; }
+  if(!/^[a-z0-9_]{3,20}$/.test(username)){
+    status.textContent = '3-20 characters: lowercase letters, numbers, underscores only.';
+    status.className = 'field-hint bad';
+    return;
+  }
+  status.textContent = 'Checking availability…';
+  status.className = 'field-hint';
+
+  setTimeout(async () => {
+    if(myToken !== editUsernameCheckToken) return;
+    const { data, error } = await sb.from('profiles').select('id').eq('username', username).neq('id', currentUser.id).maybeSingle();
+    if(myToken !== editUsernameCheckToken) return;
+    if(error){ status.textContent = "Couldn't check availability, try again."; status.className = 'field-hint bad'; return; }
+    if(data){
+      status.textContent = 'That username is taken.';
+      status.className = 'field-hint bad';
+    } else {
+      editUsernameAvailable = true;
+      status.textContent = 'Available.';
+      status.className = 'field-hint ok';
+    }
+  }, 450);
+}
+
 function openEditProfile(){
   if(!currentUser) return;
   editPhoto = null;
   document.getElementById('edit-name').value = currentUser.name || '';
+  document.getElementById('edit-username').value = currentUser.username || '';
+  resetEditUsernameStatus();
   document.getElementById('edit-password').value = '';
   document.getElementById('edit-password-confirm').value = '';
   const picker = document.getElementById('edit-avatar-picker');
@@ -879,6 +1010,7 @@ function openEditProfile(){
 
 async function submitEditProfile(){
   const name = document.getElementById('edit-name').value.trim();
+  const username = document.getElementById('edit-username').value.trim();
   const password = document.getElementById('edit-password').value;
   const passwordConfirm = document.getElementById('edit-password-confirm').value;
   const nameErr = document.getElementById('edit-name-error');
@@ -887,6 +1019,8 @@ async function submitEditProfile(){
   nameErr.classList.remove('show'); formErr.classList.remove('show'); formOk.classList.remove('show');
 
   if(!name){ nameErr.classList.add('show'); return; }
+  if(!/^[a-z0-9_]{3,20}$/.test(username)){ formErr.textContent = 'Pick a username: 3-20 characters, lowercase letters, numbers or underscores.'; formErr.classList.add('show'); return; }
+  if(!editUsernameAvailable){ formErr.textContent = 'Check that your username is available before saving.'; formErr.classList.add('show'); return; }
   if(currentUser.provider !== 'google' && password && password !== passwordConfirm){
     formErr.textContent = "New passwords don't match.";
     formErr.classList.add('show');
@@ -904,9 +1038,15 @@ async function submitEditProfile(){
 
   try{
     if(editPhoto) await uploadOwnAvatar(editPhoto);
-    const { error: profileError } = await sb.from('profiles').update({ display_name: name }).eq('id', currentUser.id);
-    if(profileError) throw profileError;
+    const { error: profileError } = await sb.from('profiles').update({ display_name: name, username }).eq('id', currentUser.id);
+    if(profileError){
+      // Belt-and-braces against a race with someone else claiming the same
+      // username between the live check above and this save landing.
+      if(/unique|duplicate/i.test(profileError.message)) throw new Error('That username was just taken, pick another.');
+      throw profileError;
+    }
     currentUser.name = name;
+    currentUser.username = username;
 
     if(currentUser.provider !== 'google' && password){
       const { error: pwError } = await sb.auth.updateUser({ password });
@@ -992,6 +1132,8 @@ async function logout(){
   signupPhoto = null;
   clearActiveSession();
   document.getElementById('signup-name').value = '';
+  document.getElementById('signup-username').value = '';
+  resetUsernameStatus();
   document.getElementById('signup-email').value = '';
   document.getElementById('signup-password').value = '';
   document.getElementById('signup-avatar-picker').style.backgroundImage = '';
@@ -1640,7 +1782,7 @@ function userRowHtml(d, followingSet){
   return `
     <div class="user-row" id="user-row-${d.id}">
       <div class="user-avatar">${ICON_PERSON}</div>
-      <div class="user-meta"><div class="user-name">${escapeHtml(d.display_name)}</div></div>
+      <div class="user-meta"><div class="user-name">${escapeHtml(d.display_name)}</div><div class="user-handle">@${escapeHtml(d.username)}</div></div>
       ${btnHtml}
     </div>`;
 }
