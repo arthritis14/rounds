@@ -238,6 +238,8 @@
   @keyframes cheerspop{ 0%{ transform:scale(1); } 45%{ transform:scale(1.35); } 100%{ transform:scale(1); } }
   .cheers-emoji{ display:inline-block; }
   .post-author{ display:flex; align-items:center; gap:12px; margin-bottom:11px; }
+  .post-delete-btn{ margin-left:auto; flex-shrink:0; width:32px; height:32px; border-radius:50%; background:transparent; border:none; display:flex; align-items:center; justify-content:center; color:var(--muted); cursor:pointer; transition:background 120ms var(--ease-out), color 120ms var(--ease-out), transform 120ms var(--ease-out); }
+  .post-delete-btn:active{ background:var(--surface2); color:var(--danger); transform:scale(.92); }
   .post-avatar{ width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; flex:none; background:var(--primary-tint); color:var(--primary-light); }
   .post-author-name{ font-family:var(--font-sans); font-weight:700; font-size:15px; color:var(--ink); }
   .post-meta{ color:var(--muted); font-size:12px; margin-top:1px; }
@@ -697,6 +699,7 @@ const ICON_IMAGE = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" 
 const ICON_PLUS = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"></line><line x1="4" y1="12" x2="20" y2="12"></line></svg>';
 const ICON_COMMENT = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 3.5v-3.5H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"></path></svg>';
 const ICON_SHARE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7.5 7.5L12 3l4.5 4.5"></path><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path></svg>';
+const ICON_TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
 
 // ---------------------------------------------------------------
 // TOAST + CONFIRM SHEET — in-app replacements for alert()/confirm().
@@ -1854,6 +1857,7 @@ function renderPostCard(event, authorName, opts){
       <div class="post-author">
         <div class="post-avatar" ${avatarStyle}>${avatarContent}</div>
         <div><div class="post-author-name">${escapeHtml(authorName)}</div><div class="post-meta">${dateStr}</div></div>
+        ${opts.editable ? `<button class="post-delete-btn" onclick="deletePost('${event.id}')" aria-label="Delete round">${ICON_TRASH}</button>` : ''}
       </div>
       <div class="post-title">${escapeHtml(event.title)}</div>
       ${event.description ? `<div class="post-desc">${escapeHtml(event.description)}</div>` : ''}
@@ -1923,6 +1927,41 @@ function mountPostCard(container, event, authorName, opts){
       e.target.value = '';
     });
   }
+}
+
+// Delete a round entirely — only ever offered on your own posts (the
+// delete button is only rendered when opts.editable). The DB has a real
+// "users can delete their own events" RLS policy backing this up, and
+// cheers/comments on the round cascade-delete with it, so this can't leave
+// orphaned rows even if someone found a way to call it on a post that
+// isn't theirs.
+async function deletePost(eventId){
+  if(!currentUser) return;
+  const ok = await showConfirm('Delete this round?', "This removes it from your profile and everyone's feed. This can't be undone.", 'Delete');
+  if(!ok) return;
+
+  const { error } = await sb.from('events').delete().eq('id', eventId);
+  if(error){
+    showToast("Couldn't delete that. " + (error.message || 'Check your connection and try again.'), 3400);
+    return;
+  }
+  eventCache.delete(String(eventId));
+
+  // Best-effort cleanup of this round's photos in Storage. The DB row (and
+  // everyone's cheers/comments on it) is already gone either way — a
+  // failure here just leaves orphaned files behind rather than blocking
+  // anything the person can see.
+  sb.storage.from('photos').list(`${currentUser.id}/${eventId}`)
+    .then(({ data: files }) => {
+      if(files && files.length){
+        const paths = files.map(f => `${currentUser.id}/${eventId}/${f.name}`);
+        sb.storage.from('photos').remove(paths).catch(() => {});
+      }
+    })
+    .catch(() => {});
+
+  showToast('Round deleted.');
+  await renderYou();
 }
 
 async function toggleCheers(eventId, uid){
