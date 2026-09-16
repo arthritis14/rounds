@@ -1213,13 +1213,22 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   });
   d += ` L${xScale(endTime).toFixed(1)},${yScale(count).toFixed(1)}`;
 
-  // Real clock-aligned gridlines: hourly when the session runs long enough,
-  // stepping down to nice sub-hour intervals (30/20/15/10/5 min) so a short
-  // session still gets a genuine, readable grid instead of arbitrary divisions.
+  // Real clock-aligned gridlines: a line every hour, on the hour, for any
+  // session an hour or longer (stepping up to 2/3/4/6/8/12-hour intervals
+  // only once an hourly grid would get too dense to read). Under an hour,
+  // step down to nice sub-hour intervals so a short session still gets a
+  // genuine, readable grid instead of collapsing to one or two lines.
   const oneHour = 3600000;
-  const niceStepsMs = [5,10,15,20,30].map(m=>m*60000).concat([1,2,3,4,6,8,12].map(hr=>hr*oneHour));
-  let step = niceStepsMs[niceStepsMs.length-1];
-  for(const s of niceStepsMs){ if(dur/s <= 7){ step = s; break; } }
+  let step;
+  if(dur >= oneHour){
+    const hourSteps = [1,2,3,4,6,8,12].map(hr=>hr*oneHour);
+    step = hourSteps[hourSteps.length-1];
+    for(const s of hourSteps){ if(dur/s <= 8){ step = s; break; } }
+  } else {
+    const subHourSteps = [5,10,15,20,30].map(m=>m*60000);
+    step = subHourSteps[subHourSteps.length-1];
+    for(const s of subHourSteps){ if(dur/s <= 7){ step = s; break; } }
+  }
   const tickTimes = [];
   for(let t = Math.ceil(startTime/step)*step; t <= endTime; t += step) tickTimes.push(t);
   if(tickTimes.length===0 || tickTimes[0]-startTime > step*0.2) tickTimes.unshift(startTime);
