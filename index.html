@@ -11,6 +11,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root{
     --bg:#111111; --surface:#1A1A1A; --surface2:#222222;
@@ -255,6 +257,8 @@
   .slide-graph svg{ position:absolute; inset:0; width:100%; height:100%; }
   .slide-graph .wm{ position:absolute; bottom:9px; left:0; right:0; text-align:center; font-family:var(--font-sans); font-weight:800; font-size:11px; letter-spacing:.14em; color:var(--muted); }
   .slide-graph .wm span{ color:var(--primary); }
+  .slide-map{ width:100%; height:100%; background:var(--surface2); }
+  .slide-map .leaflet-container{ background:var(--surface2); font-family:var(--font-sans); }
   .slide-photo{ width:100%; height:100%; background-size:cover; background-position:center; position:relative; }
   .slide-photo .badge{ position:absolute; top:10px; left:10px; width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; font-size:13px; }
   .slide-add{ width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; background:var(--surface2); color:var(--muted); font-size:13px; font-weight:600; cursor:pointer; }
@@ -650,6 +654,12 @@
 const SUPABASE_URL = 'https://ljbhsdkpguuujbykwngt.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_Nfu52QbtWDrqpXbEAH8l2A_AyXjjR89';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Mapbox public access token — get a free one at mapbox.com/account/access-tokens
+// (50k free map loads/mo). Until a real token is pasted in here, the map view
+// is simply never shown — everything else about the app is unaffected.
+const MAPBOX_TOKEN = 'PASTE_YOUR_MAPBOX_PUBLIC_TOKEN_HERE';
+const MAPBOX_ENABLED = !!(MAPBOX_TOKEN && !MAPBOX_TOKEN.startsWith('PASTE_'));
 
 let currentUser = null;   // real profile row: { id, username, display_name, photo_url, provider }
 let authMode = 'signup';  // 'signup' | 'login' — which the signup screen's form currently does
@@ -1360,6 +1370,23 @@ async function startSession(){
   showScreen('screen-activity');
   await initCamera();
   startTimer();
+  // Warm up the location permission prompt now (rather than on the first
+  // log) so it doesn't add latency to that tap. Entirely best-effort — a
+  // denial or an unsupported browser just means logged rounds won't carry
+  // a location, nothing else about the flow changes.
+  if(navigator.geolocation) navigator.geolocation.getCurrentPosition(() => {}, () => {}, { maximumAge: 60000, timeout: 8000 });
+}
+// Best-effort, non-blocking location capture for one logged drink. Never
+// awaited by the logging flow itself — resolves in the background and
+// patches straight onto the entry object (which is still the same object
+// sitting in state.entries) whenever it lands.
+function captureLocationOnto(entry){
+  if(!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    (pos) => { entry.lat = pos.coords.latitude; entry.lng = pos.coords.longitude; saveActiveSession(); },
+    () => { /* denied/unavailable — entry just has no location, silently */ },
+    { maximumAge: 60000, timeout: 8000 }
+  );
 }
 function startTimer(){
   clearInterval(state.timerInterval);
@@ -1378,7 +1405,11 @@ document.getElementById('camera-input').addEventListener('change', (e) => {
   reader.onload = () => { addEntry(state.pendingLogType, reader.result); state.pendingLogType = null; };
   reader.readAsDataURL(file); e.target.value = '';
 });
-function addEntry(type, img){ state.entries.push({ type, time: Date.now(), img }); saveActiveSession(); renderLogStrip(); }
+function addEntry(type, img){
+  const entry = { type, time: Date.now(), img };
+  state.entries.push(entry); saveActiveSession(); renderLogStrip();
+  captureLocationOnto(entry);
+}
 function renderLogStrip(){
   const strip = document.getElementById('log-strip'); strip.innerHTML = '';
   state.entries.slice().reverse().forEach(entry => {
@@ -1499,6 +1530,10 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   });
 
   const axisLine = `<line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="${axisColor}" stroke-width="1"/>`;
+  // Y-axis line, themed the same as the horizontal gridlines (white/translucent
+  // on dark mode, grey on light mode) rather than the solid axisColor used for
+  // the X-axis, so it reads as part of the grid rather than a second hard edge.
+  const yAxisLine = `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="${gridColor}" stroke-width="1"/>`;
 
   // One horizontal gridline per drink logged, so every beer is a readable rung.
   let yLabels = '';
@@ -1508,7 +1543,44 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
     yLabels += `<text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="${textColor}">${c}</text>`;
   }
 
-  return `${yLabels}${ticks}${axisLine}<path d="${d}" fill="none" stroke="#FC4C02" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>${markers}`;
+  return `${yLabels}${yAxisLine}${ticks}${axisLine}<path d="${d}" fill="none" stroke="#FC4C02" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>${markers}`;
+}
+
+// ---------------------------------------------------------------
+// MAP — a Strava-style "route" for a round: every logged drink that
+// captured a location, plotted as a pin and connected in time order.
+// Static/non-interactive by design (it sits inside a horizontally
+// swiping carousel, so its own drag/zoom would fight that gesture).
+// ---------------------------------------------------------------
+function buildLocationMap(el, entries){
+  if(!MAPBOX_ENABLED || !window.L || !el) return;
+  const pts = entries.filter(e => e.lat != null && e.lng != null).sort((a,b) => a.time - b.time);
+  if(pts.length === 0) return;
+
+  const map = L.map(el, {
+    zoomControl: false, attributionControl: false, dragging: false,
+    scrollWheelZoom: false, doubleClickZoom: false, touchZoom: false,
+    boxZoom: false, keyboard: false, tap: false,
+  });
+  L.tileLayer(
+    `https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/256/{z}/{x}/{y}@2x?access_token=${MAPBOX_TOKEN}`,
+    { maxZoom: 19 }
+  ).addTo(map);
+
+  const latlngs = pts.map(p => [p.lat, p.lng]);
+  if(latlngs.length > 1){
+    const line = L.polyline(latlngs, { color: '#FC4C02', weight: 3.5, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+    map.fitBounds(line.getBounds(), { padding: [28, 28] });
+  } else {
+    map.setView(latlngs[0], 15);
+  }
+  pts.forEach(p => {
+    L.circleMarker([p.lat, p.lng], { radius: 8, color: '#FC4C02', weight: 2, fillColor: '#fff', fillOpacity: 1 }).addTo(map);
+  });
+  // Leaflet measures its container at init — if that happened while the
+  // carousel slide was off-screen (a later slide), the tile layer can come
+  // up the wrong size until told to re-check.
+  setTimeout(() => map.invalidateSize(), 60);
 }
 
 // ---------------------------------------------------------------
@@ -1576,6 +1648,7 @@ async function publishEvent(){
     const uploadedEntries = await Promise.all(state.entries.map(async (e, i) => ({
       type: e.type, time: e.time,
       photo_url: e.img ? await uploadDataUrlToStorage(e.img, `${currentUser.id}/${eventId}/entry-${i}.jpg`) : null,
+      lat: e.lat ?? null, lng: e.lng ?? null,
     })));
     const uploadedExtra = await Promise.all(compose.extraPhotos.map((img, i) =>
       uploadDataUrlToStorage(img, `${currentUser.id}/${eventId}/extra-${i}.jpg`)));
@@ -1619,7 +1692,7 @@ function normalizeEventRow(row, viewerCheeredSet){
     description: row.description,
     startTime: new Date(row.start_time).getTime(),
     endTime: new Date(row.end_time).getTime(),
-    entries: (row.entries || []).map(e => ({ type: e.type, time: e.time, img: e.photo_url })),
+    entries: (row.entries || []).map(e => ({ type: e.type, time: e.time, img: e.photo_url, lat: e.lat ?? null, lng: e.lng ?? null })),
     extraPhotos: row.extra_photos || [],
     beers: row.beers, cocktails: row.cocktails, total: row.total, duration: row.duration_ms,
     pace: row.total > 1 ? formatDurationShort(row.duration_ms / row.total) + '/round' : '—',
@@ -1648,8 +1721,14 @@ function renderPostCard(event, authorName, opts){
   const uid = `post-${event.id}-${carouselSeq++}`;
   const dateStr = formatRelative(event.postedAt);
 
-  // build carousel slides: graph, drink photos (real, if any), extra photos, +add tile (editable only)
+  // build carousel slides: graph, map (only if this round has any located
+  // entries and a Mapbox token is configured), drink photos (real, if any),
+  // extra photos, +add tile (editable only)
   let slides = `<div class="carousel-slide"><div class="slide-graph"><svg id="${uid}-chart" viewBox="0 0 300 244"></svg><div class="wm"><img src="${LOGO_SRC}" alt="Rounds" style="height:11px;width:auto;display:inline-block;"></div></div></div>`;
+  const hasLocations = MAPBOX_ENABLED && event.entries.some(e => e.lat != null && e.lng != null);
+  if(hasLocations){
+    slides += `<div class="carousel-slide"><div class="slide-map" id="${uid}-map"></div></div>`;
+  }
   event.entries.forEach(e => {
     if(e.img){
       slides += `<div class="carousel-slide"><div class="slide-photo" style="background-image:url(${e.img})"><div class="badge">${EMOJI[e.type]}</div></div></div>`;
@@ -1712,6 +1791,8 @@ function mountPostCard(container, event, authorName, opts){
   container.insertAdjacentHTML('beforeend', html);
   document.getElementById(`${uid}-chart`).innerHTML =
     buildCountChart(event.entries, event.startTime, event.endTime, 300, 244, { pinR:10 });
+  const mapEl = document.getElementById(`${uid}-map`);
+  if(mapEl) buildLocationMap(mapEl, event.entries);
 
   const track = document.getElementById(`${uid}-track`);
   const dots = document.querySelectorAll(`#${uid}-dots .dot`);
