@@ -411,6 +411,20 @@
     <a class="back-link" id="auth-mode-toggle" onclick="toggleAuthMode()" style="display:block; text-align:center; margin-top:14px;">Already have an account? Log in</a>
   </section>
 
+  <!-- CHOOSE USERNAME — one-time gate for a Google signup, which has no
+       form of its own to collect a real username on the way in. -->
+  <section id="screen-choose-username" class="screen no-nav">
+    <div class="wordmark">One more thing</div>
+    <h1>Pick a<br/>username.</h1>
+    <p class="sub">This is how friends with the same name tell you apart. We've started you off with one below — keep it or change it.</p>
+
+    <input id="claim-username" class="text-input" placeholder="Username" autocapitalize="off" autocorrect="off" spellcheck="false" oninput="onClaimUsernameInput()" />
+    <div class="field-hint" id="claim-username-status">3-20 characters: lowercase letters, numbers, underscores.</div>
+    <div class="field-error" id="claim-username-error"></div>
+
+    <button class="btn btn-primary" id="claim-username-btn" onclick="submitClaimUsername()">Continue</button>
+  </section>
+
   <!-- FEED (landing) -->
   <section id="screen-feed" class="screen">
     <div class="top-row">
@@ -1107,6 +1121,96 @@ function onEditUsernameInput(){
       status.className = 'field-hint ok';
     }
   }, 450);
+}
+
+// ---------------------------------------------------------------
+// CHOOSE USERNAME — a one-time gate shown right after a Google signup
+// (the only signup path with no form of its own to collect a real
+// username). The field is pre-filled with the auto-generated slug the
+// signup trigger fell back to, so "already theirs" is the resting state,
+// same pattern as Edit Profile's own username field.
+// ---------------------------------------------------------------
+let claimUsernameAvailable = true;
+let claimUsernameCheckToken = 0;
+
+function resetClaimUsernameStatus(){
+  claimUsernameAvailable = true;
+  claimUsernameCheckToken++;
+  const status = document.getElementById('claim-username-status');
+  status.textContent = '3-20 characters: lowercase letters, numbers, underscores.';
+  status.className = 'field-hint';
+}
+
+function onClaimUsernameInput(){
+  const input = document.getElementById('claim-username');
+  const cursor = input.selectionStart;
+  if(input.value !== input.value.toLowerCase()){ input.value = input.value.toLowerCase(); input.setSelectionRange(cursor, cursor); }
+  const status = document.getElementById('claim-username-status');
+  const username = input.value.trim();
+  const myToken = ++claimUsernameCheckToken;
+
+  if(username === (currentUser.username || '')){
+    claimUsernameAvailable = true;
+    status.textContent = '3-20 characters: lowercase letters, numbers, underscores.';
+    status.className = 'field-hint';
+    return;
+  }
+  claimUsernameAvailable = false;
+  if(!username){ status.textContent = 'Pick a username.'; status.className = 'field-hint bad'; return; }
+  if(!/^[a-z0-9_]{3,20}$/.test(username)){
+    status.textContent = '3-20 characters: lowercase letters, numbers, underscores only.';
+    status.className = 'field-hint bad';
+    return;
+  }
+  status.textContent = 'Checking availability…';
+  status.className = 'field-hint';
+
+  setTimeout(async () => {
+    if(myToken !== claimUsernameCheckToken) return;
+    const { data, error } = await sb.from('profiles').select('id').eq('username', username).neq('id', currentUser.id).maybeSingle();
+    if(myToken !== claimUsernameCheckToken) return;
+    if(error){ status.textContent = "Couldn't check availability, try again."; status.className = 'field-hint bad'; return; }
+    if(data){
+      status.textContent = 'That username is taken.';
+      status.className = 'field-hint bad';
+    } else {
+      claimUsernameAvailable = true;
+      status.textContent = 'Available.';
+      status.className = 'field-hint ok';
+    }
+  }, 450);
+}
+
+function openChooseUsername(){
+  document.getElementById('claim-username').value = currentUser.username || '';
+  document.getElementById('claim-username-error').classList.remove('show');
+  resetClaimUsernameStatus();
+  showScreen('screen-choose-username');
+}
+
+async function submitClaimUsername(){
+  const username = document.getElementById('claim-username').value.trim();
+  const formErr = document.getElementById('claim-username-error');
+  formErr.classList.remove('show');
+  if(!/^[a-z0-9_]{3,20}$/.test(username)){ formErr.textContent = 'Pick a username: 3-20 characters, lowercase letters, numbers or underscores.'; formErr.classList.add('show'); return; }
+  if(!claimUsernameAvailable){ formErr.textContent = 'Check that your username is available before continuing.'; formErr.classList.add('show'); return; }
+
+  const btn = document.getElementById('claim-username-btn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try{
+    const { error } = await sb.from('profiles').update({ username, username_set: true }).eq('id', currentUser.id);
+    if(error){
+      formErr.textContent = /unique|duplicate/i.test(error.message) ? 'That username was just taken, pick another.' : error.message;
+      formErr.classList.add('show');
+      return;
+    }
+    currentUser.username = username;
+    currentUser.username_set = true;
+    if(!resumeActiveSessionIfAny()) goToFeed();
+  } finally {
+    btn.disabled = false; btn.textContent = originalLabel;
+  }
 }
 
 function openEditProfile(){
@@ -2080,7 +2184,7 @@ initTheme();
 async function loadOwnProfile(userId){
   const { data, error } = await sb.from('profiles').select('*').eq('id', userId).single();
   if(error || !data) return null;
-  return { id: data.id, username: data.username, name: data.display_name, photo: data.photo_url, provider: data.provider };
+  return { id: data.id, username: data.username, name: data.display_name, photo: data.photo_url, provider: data.provider, username_set: data.username_set };
 }
 
 function resumeActiveSessionIfAny(){
@@ -2119,11 +2223,18 @@ sb.auth.onAuthStateChange(async (event, session) => {
       return;
     }
     currentUser = profile;
+    // A Google signup has no form of its own to collect a real username on
+    // the way in (unlike email/password, which collects one on the signup
+    // form) — gate on screen-choose-username once, right after sign-in,
+    // rather than leaving them on the auto-generated slug indefinitely.
+    const needsUsername = !profile.username_set;
     if(!authBootstrapped){
       authBootstrapped = true;
-      if(!resumeActiveSessionIfAny()) goToFeed();
+      if(needsUsername) openChooseUsername();
+      else if(!resumeActiveSessionIfAny()) goToFeed();
     } else if(event === 'SIGNED_IN'){
-      goToFeed();
+      if(needsUsername) openChooseUsername();
+      else goToFeed();
     }
   } else {
     currentUser = null;
