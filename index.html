@@ -844,18 +844,36 @@ async function shareProfileMessage(){
   copyProfileMessage();
 }
 
-function copyProfileMessage(btnEl){
+// Robust clipboard copy: the async Clipboard API can reject (permission
+// denied, insecure context, some in-app browsers) even right after a real
+// click, so this always falls back to the legacy textarea+execCommand path
+// rather than failing silently.
+async function copyTextToClipboard(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    try{ await navigator.clipboard.writeText(text); return true; } catch(err){ /* fall through */ }
+  }
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch(err){ return false; }
+}
+
+async function copyProfileMessage(btnEl){
   const message = document.getElementById('share-profile-message').value.trim();
   if(!message) return;
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(message).then(() => {
-      if(btnEl){
-        const original = btnEl.textContent;
-        btnEl.textContent = 'Copied';
-        setTimeout(() => { btnEl.textContent = original; }, 1500);
-      }
-    });
-  }
+  const ok = await copyTextToClipboard(message);
+  if(!btnEl) return;
+  const original = btnEl.textContent;
+  btnEl.textContent = ok ? 'Copied' : "Couldn't copy, select and copy manually";
+  setTimeout(() => { btnEl.textContent = original; }, ok ? 1500 : 2500);
 }
 
 async function logout(){
@@ -1496,7 +1514,7 @@ async function unfollowUser(id){
 function inviteAll(){
   const message = `Hey! I've been logging nights out on Rounds, it's like Strava for drinks. Join me: ${window.location.origin}`;
   if(navigator.share){ navigator.share({ text: message }).catch(() => {}); }
-  else if(navigator.clipboard){ navigator.clipboard.writeText(message); }
+  else { copyTextToClipboard(message).then(ok => { if(ok) alert('Invite message copied.'); }); }
 }
 
 // ---------------------------------------------------------------
@@ -1567,9 +1585,7 @@ async function downloadShareImage(){
 
 function copyShareLink(){
   const message = `Check out my rounds on Rounds: ${window.location.origin}`;
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(message).then(() => alert('Link copied.'));
-  }
+  copyTextToClipboard(message).then(ok => alert(ok ? 'Link copied.' : "Couldn't copy automatically, here's the link: " + window.location.origin));
 }
 
 async function shareToDestination(label){
