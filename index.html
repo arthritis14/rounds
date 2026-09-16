@@ -96,9 +96,24 @@
   }
   .avatar-picker .badge{
     position:absolute; bottom:0; right:0; width:30px; height:30px; border-radius:50%;
-    background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center;
+    background:var(--primary-dim); color:#fff; display:flex; align-items:center; justify-content:center;
     border:2px solid var(--surface); font-weight:700;
   }
+
+  /* ---- avatar crop/zoom modal ---- */
+  .crop-modal{ position:fixed; inset:0; z-index:200; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.88); padding:24px; }
+  .crop-modal.show{ display:flex; }
+  .crop-modal-inner{ display:flex; flex-direction:column; align-items:center; gap:22px; width:100%; max-width:320px; }
+  .crop-modal-title{ color:var(--ink); font-family:var(--font-sans); font-weight:700; font-size:15px; text-align:center; }
+  .crop-viewport{ position:relative; width:280px; height:280px; max-width:78vw; max-height:78vw; overflow:hidden; border-radius:16px; background:#000; touch-action:none; cursor:grab; }
+  .crop-viewport:active{ cursor:grabbing; }
+  .crop-viewport img{ position:absolute; left:0; top:0; max-width:none; user-select:none; -webkit-user-drag:none; pointer-events:none; }
+  .crop-mask{ position:absolute; inset:0; border-radius:50%; box-shadow:0 0 0 9999px rgba(0,0,0,.7); pointer-events:none; border:1.5px solid rgba(255,255,255,.85); }
+  .crop-zoom-row{ display:flex; align-items:center; gap:12px; width:100%; color:var(--muted); }
+  .crop-zoom-row input[type=range]{ flex:1; accent-color:var(--primary-dim); }
+  .crop-actions{ display:flex; gap:12px; width:100%; }
+  .crop-actions .btn{ flex:1; margin:0; }
+
   .field-error{ color:var(--danger); font-size:12.5px; margin:-6px 0 10px 4px; display:none; }
   .field-error.show{ display:block; }
   .field-success{ color:#3DBE6B; font-size:13px; margin:-4px 0 14px 4px; display:none; line-height:1.5; }
@@ -107,19 +122,23 @@
 
   /* ---- mode select: clean list rows ---- */
   #screen-setup.active{ display:flex; flex-direction:column; }
-  .setup-content{ flex:1; display:flex; flex-direction:column; justify-content:center; }
-  .mode-card{ display:flex; align-items:center; gap:14px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:12px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 24px -12px rgba(255,75,22,.22); }
-  .mode-card:active{ opacity:.7; }
-  .mode-glyph{ width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; background:var(--primary); }
+  .setup-content{ flex:1; display:flex; flex-direction:column; justify-content:flex-start; padding-top:28px; }
+  .setup-content h1{ margin-bottom:26px; }
+  .mode-card{ display:flex; align-items:center; gap:16px; background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px; margin-bottom:12px; cursor:pointer; box-shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 24px -12px rgba(255,75,22,.22); transition:transform .12s ease; }
+  .mode-card:active{ opacity:.7; transform:scale(.98); }
+  .mode-glyph{ width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:none; background:var(--primary-dim); }
+  .mode-text{ flex:1; min-width:0; }
   .mode-text .t{ font-family:var(--font-sans); font-weight:700; font-size:16px; color:var(--ink); }
-  .mode-text .d{ color:var(--muted); font-size:13px; margin-top:3px; }
+  .mode-text .d{ color:var(--muted); font-size:13px; margin-top:3px; line-height:1.4; }
+  .mode-chevron{ flex:none; color:var(--muted); }
 
   /* ---- ready ---- */
   .ready-badge{ display:inline-flex; align-items:center; gap:8px; background:var(--primary-tint); border:none; padding:8px 14px; border-radius:100px; font-size:13.5px; color:var(--primary-light); font-weight:600; margin-bottom:20px; }
   .dot{ width:7px; height:7px; border-radius:50%; background:var(--primary); }
   .start-ring-wrap{ display:flex; justify-content:center; margin:40px 0 44px; }
-  .start-ring{ width:180px; height:180px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--surface2); border:3px solid var(--primary); position:relative; cursor:pointer; }
-  .start-ring span{ font-family:var(--font-display); font-weight:400; font-size:19px; letter-spacing:.07em; color:var(--primary); }
+  .start-ring{ width:180px; height:180px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--surface2); border:3px solid var(--primary-dim); position:relative; cursor:pointer; transition:transform .12s ease; }
+  .start-ring:active{ transform:scale(.96); }
+  .start-ring span{ font-family:var(--font-display); font-weight:400; font-size:19px; letter-spacing:.07em; color:var(--primary-dim); }
 
   /* ---- activity ---- */
   .timer{ font-family:var(--font-display); font-weight:400; font-size:54px; font-variant-numeric:tabular-nums; text-align:center; margin:6px 0 4px; color:var(--ink); letter-spacing:0; }
@@ -214,7 +233,7 @@
   }
   .share-preview{ position:relative; width:100%; height:100%; background:transparent; }
   .share-preview .bgphoto{ position:absolute; inset:0; background-size:cover; background-position:center; }
-  .share-preview svg{ position:absolute; inset:0; width:100%; height:100%; }
+  .share-preview svg{ position:absolute; inset:0; width:100%; height:100%; filter:drop-shadow(0 1px 2px rgba(0,0,0,.65)) drop-shadow(0 0 5px rgba(0,0,0,.4)); }
   .share-preview .stats{ position:absolute; z-index:2; top:20px; left:20px; }
   .share-preview .stats .l{ font-size:11.5px; color:rgba(255,255,255,.85); text-shadow:0 1px 4px rgba(0,0,0,.6); }
   .share-preview .stats .v{ font-family:var(--font-display); font-weight:400; font-size:25px; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.6); margin-bottom:9px; }
@@ -285,8 +304,10 @@
   .btn-request:active{ transform:scale(.94); }
   .btn-requested{ background:transparent; color:var(--muted); border:1px solid var(--line); font-family:var(--font-sans); font-weight:600; font-size:12.5px; border-radius:100px; padding:8px 16px; white-space:nowrap; }
   .btn-following{ background:var(--primary-tint); color:var(--primary-light); border:none; font-family:var(--font-sans); font-weight:600; font-size:12.5px; border-radius:100px; padding:8px 16px; white-space:nowrap; }
-  .btn-whatsapp{ display:flex; align-items:center; gap:6px; background:transparent; color:var(--whatsapp); border:1px solid var(--whatsapp); font-family:var(--font-sans); font-weight:700; font-size:12.5px; border-radius:100px; padding:8px 14px; white-space:nowrap; cursor:pointer; transition:transform .12s ease; }
+  .btn-whatsapp{ display:flex; align-items:center; gap:6px; background:transparent; color:var(--whatsapp); border:1px solid var(--whatsapp); font-family:var(--font-sans); font-weight:700; font-size:12.5px; border-radius:100px; padding:8px 14px; white-space:nowrap; cursor:pointer; transition:transform .12s ease; text-decoration:none; }
   .btn-whatsapp:active{ transform:scale(.94); }
+  .section-divider{ font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); padding-top:18px; border-top:1px solid var(--line); }
+  .contacts-empty-hint{ color:var(--muted); font-size:13px; line-height:1.5; margin-top:12px; }
 
   /* ---- bottom nav (3 items) ---- */
   .bottom-nav{ position:fixed; bottom:0; left:0; right:0; display:flex; justify-content:center; z-index:40; background:var(--surface); border-top:1px solid var(--line); }
@@ -295,7 +316,7 @@
   .nav-item.active{ color:var(--ink); }
   .nav-item .ic{ font-size:19px; }
   .nav-item:active{ transform:scale(.92); }
-  .nav-record{ width:52px; height:52px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:24px; margin-top:-22px; border:4px solid var(--surface); color:#fff; cursor:pointer; transition:transform .12s ease; }
+  .nav-record{ width:52px; height:52px; border-radius:50%; background:var(--primary-dim); display:flex; align-items:center; justify-content:center; font-size:24px; margin-top:-22px; border:4px solid var(--surface); color:#fff; cursor:pointer; transition:transform .12s ease; }
   .nav-record:active{ transform:scale(.9); }
 
   @media (max-width:360px){ .timer{font-size:42px;} .start-ring{width:150px;height:150px;} }
@@ -319,6 +340,7 @@
       </button>
       <div class="auth-divider"><div class="line"></div><span>or</span><div class="line"></div></div>
       <button class="btn-create" onclick="showScreen('screen-signup')">Create an account</button>
+      <a class="back-link" onclick="openLoginScreen()" style="display:block; text-align:center; margin-top:14px;">Already have an account? Log in</a>
     </div>
     <div class="auth-footnote"> A Vilicon Salley Production</div>
   </section>
@@ -434,7 +456,12 @@
     <div class="search-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.6" y2="16.6"></line></svg><input id="username-search" placeholder="Search by username" oninput="renderUsernameResults()" /></div>
     <div id="username-results"></div>
 
-    <div style="margin-top:20px;">
+    <div class="section-divider" style="margin-top:26px;">From your contacts</div>
+    <p class="sub" style="margin-top:4px;">Pick people from your phone and send them a WhatsApp invite &mdash; nothing sends until you hit send in WhatsApp yourself.</p>
+    <button class="btn btn-ghost" id="contacts-picker-btn" onclick="pickContactsAndInvite()" style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:12px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2.5"></rect><circle cx="12" cy="10" r="2.4"></circle><path d="M8.2 16.5a4 4 0 0 1 7.6 0"></path></svg> Choose contacts</button>
+    <div id="contacts-invite-list"></div>
+
+    <div style="margin-top:22px;">
       <button class="btn btn-ghost" onclick="inviteAll()">Invite friends to Rounds</button>
     </div>
   </section>
@@ -446,15 +473,18 @@
     <h1>What are we<br/>tracking tonight?</h1>
     <div class="mode-card" onclick="selectMode('beer')">
       <div class="mode-glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h10v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8z"/><path d="M16 10h1.5a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H16"/><path d="M6 8l.7-3.2A1 1 0 0 1 7.7 4h6.6a1 1 0 0 1 1 .8L16 8"/><line x1="8" y1="12" x2="14" y2="12"/></svg></div>
-      <div class="mode-text"><div class="t">Beer</div></div>
+      <div class="mode-text"><div class="t">Beer</div><div class="d">Pints, pitchers, cans &mdash; anything on tap</div></div>
+      <svg class="mode-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
     </div>
     <div class="mode-card" onclick="selectMode('cocktail')">
       <div class="mode-glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-8 9-8-9z"/><line x1="12" y1="14" x2="12" y2="20"/><line x1="8" y1="20" x2="16" y2="20"/></svg></div>
-      <div class="mode-text"><div class="t">Cocktails</div></div>
+      <div class="mode-text"><div class="t">Cocktails</div><div class="d">Mixed drinks, shots, wine &amp; spirits</div></div>
+      <svg class="mode-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
     </div>
     <div class="mode-card" onclick="selectMode('both')">
       <div class="mode-glyph"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h7v10.2A1.3 1.3 0 0 1 7.7 18.5H3.3A1.3 1.3 0 0 1 2 17.2V7z"/><line x1="2" y1="9.8" x2="9" y2="9.8"/><path d="M14 5h9l-4.5 5.2v8.3"/><line x1="15.5" y1="18.5" x2="22" y2="18.5"/></svg></div>
-      <div class="mode-text"><div class="t">Both</div></div>
+      <div class="mode-text"><div class="t">Both</div><div class="d">Track everything in one round</div></div>
+      <svg class="mode-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
     </div>
     </div>
   </section>
@@ -549,6 +579,25 @@
   </div>
 </div>
 
+<div class="crop-modal" id="avatar-crop-modal">
+  <div class="crop-modal-inner">
+    <div class="crop-modal-title">Drag to reposition, use the slider to zoom</div>
+    <div class="crop-viewport" id="crop-viewport">
+      <img id="crop-image" alt="" draggable="false" />
+      <div class="crop-mask"></div>
+    </div>
+    <div class="crop-zoom-row">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      <input type="range" id="crop-zoom-slider" min="1" max="3" step="0.01" value="1" oninput="onCropZoomChange(parseFloat(this.value))" />
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    </div>
+    <div class="crop-actions">
+      <button class="btn btn-ghost" onclick="closeCropModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmCrop()">Use photo</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // =================================================================
 // BACKEND — real Supabase project (Postgres + Auth + Storage).
@@ -591,6 +640,7 @@ const ICON_IMAGE = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" 
 const ICON_PLUS = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"></line><line x1="4" y1="12" x2="20" y2="12"></line></svg>';
 const ICON_COMMENT = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 3.5v-3.5H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"></path></svg>';
 const ICON_SHARE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7.5 7.5L12 3l4.5 4.5"></path><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path></svg>';
+const ICON_WHATSAPP = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8c-1.2 0-2.4-.3-3.4-.8L4 20l1.3-4.2C4.5 14.5 4 13.3 4 12z"/></svg>';
 // ---------------------------------------------------------------
 // THEME — dark by default (the look everyone preferred); light is
 // an opt-in switch in the You tab. Persisted per-device only.
@@ -632,7 +682,7 @@ function showScreen(id){
 }
 function goToFeed(){ renderFeed(); showScreen('screen-feed'); }
 function goToYou(){ renderYou(); showScreen('screen-you'); }
-function openFindFriends(){ document.getElementById('username-search').value = ''; document.getElementById('username-results').innerHTML = ''; showScreen('screen-find-friends'); }
+function openFindFriends(){ document.getElementById('username-search').value = ''; document.getElementById('username-results').innerHTML = ''; document.getElementById('contacts-invite-list').innerHTML = ''; showScreen('screen-find-friends'); }
 
 // ---------------------------------------------------------------
 // AUTH — real Supabase Auth. Google is real OAuth (opens Google,
@@ -656,17 +706,117 @@ async function continueWithGoogle(btn){
   // picks the session up when it returns.
 }
 
+// ---------------------------------------------------------------
+// AVATAR CROP/ZOOM — a real Instagram-style crop step between picking a
+// photo and it becoming the avatar: drag to reposition, slider to zoom,
+// rasterized to a square on "Use photo" so it always fills the circular
+// frame cleanly instead of using whatever the raw upload happened to frame.
+// ---------------------------------------------------------------
+let cropState = null;
+let cropDragging = false, cropDragStart = {x:0,y:0}, cropPanStart = {x:0,y:0};
+
+function openAvatarCropper(srcDataUrl, onConfirm){
+  const imgEl = document.getElementById('crop-image');
+  const zoomSlider = document.getElementById('crop-zoom-slider');
+  imgEl.onload = () => {
+    const V = document.getElementById('crop-viewport').clientWidth || 280;
+    const natW = imgEl.naturalWidth, natH = imgEl.naturalHeight;
+    const baseScale = Math.max(V/natW, V/natH);
+    cropState = { natW, natH, baseScale, zoom:1, panX:0, panY:0, viewport:V, imgEl, onConfirm };
+    zoomSlider.value = 1;
+    applyCropTransform();
+  };
+  imgEl.src = srcDataUrl;
+  document.getElementById('avatar-crop-modal').classList.add('show');
+}
+function closeCropModal(){
+  document.getElementById('avatar-crop-modal').classList.remove('show');
+  cropState = null;
+}
+function clampCropPan(){
+  const s = cropState;
+  const dispW = s.natW*s.baseScale*s.zoom, dispH = s.natH*s.baseScale*s.zoom;
+  const centeredX = (s.viewport-dispW)/2, centeredY = (s.viewport-dispH)/2;
+  let left = centeredX+s.panX, top = centeredY+s.panY;
+  left = Math.min(0, Math.max(s.viewport-dispW, left));
+  top = Math.min(0, Math.max(s.viewport-dispH, top));
+  s.panX = left-centeredX; s.panY = top-centeredY;
+  return { left, top, dispW, dispH };
+}
+function applyCropTransform(){
+  if(!cropState) return;
+  const { left, top, dispW, dispH } = clampCropPan();
+  const img = cropState.imgEl;
+  img.style.width = dispW+'px'; img.style.height = dispH+'px';
+  img.style.left = left+'px'; img.style.top = top+'px';
+}
+function onCropZoomChange(newZoom){
+  if(!cropState) return;
+  const ratio = newZoom / cropState.zoom;
+  cropState.panX *= ratio; cropState.panY *= ratio;
+  cropState.zoom = newZoom;
+  applyCropTransform();
+}
+function cropPointerDown(e){
+  if(!cropState) return;
+  cropDragging = true;
+  const p = e.touches ? e.touches[0] : e;
+  cropDragStart = { x:p.clientX, y:p.clientY };
+  cropPanStart = { x:cropState.panX, y:cropState.panY };
+  if(e.pointerId !== undefined) e.target.setPointerCapture(e.pointerId);
+  e.preventDefault();
+}
+function cropPointerMove(e){
+  if(!cropDragging || !cropState) return;
+  const p = e.touches ? e.touches[0] : e;
+  cropState.panX = cropPanStart.x + (p.clientX - cropDragStart.x);
+  cropState.panY = cropPanStart.y + (p.clientY - cropDragStart.y);
+  applyCropTransform();
+}
+function cropPointerUp(){ cropDragging = false; }
+function confirmCrop(){
+  const s = cropState; if(!s) return;
+  const { left, top, dispW } = clampCropPan();
+  const scale = dispW / s.natW;
+  const srcX = -left/scale, srcY = -top/scale, srcSize = s.viewport/scale;
+  const OUT = 480;
+  const canvas = document.createElement('canvas');
+  canvas.width = OUT; canvas.height = OUT;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(s.imgEl, srcX, srcY, srcSize, srcSize, 0, 0, OUT, OUT);
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+  const onConfirm = s.onConfirm;
+  closeCropModal();
+  if(onConfirm) onConfirm(dataUrl);
+}
+(function initCropDrag(){
+  const vp = document.getElementById('crop-viewport');
+  vp.addEventListener('pointerdown', cropPointerDown);
+  vp.addEventListener('pointermove', cropPointerMove);
+  vp.addEventListener('pointerup', cropPointerUp);
+  vp.addEventListener('pointercancel', cropPointerUp);
+  vp.addEventListener('pointerleave', cropPointerUp);
+})();
+
 document.getElementById('signup-photo-input').addEventListener('change', (e) => {
   const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    signupPhoto = reader.result;
-    const picker = document.getElementById('signup-avatar-picker');
-    picker.style.backgroundImage = `url(${signupPhoto})`;
-    document.getElementById('signup-avatar-emoji').style.display = 'none';
+    openAvatarCropper(reader.result, croppedDataUrl => {
+      signupPhoto = croppedDataUrl;
+      const picker = document.getElementById('signup-avatar-picker');
+      picker.style.backgroundImage = `url(${signupPhoto})`;
+      document.getElementById('signup-avatar-emoji').style.display = 'none';
+    });
   };
   reader.readAsDataURL(file);
+  e.target.value = '';
 });
+
+function openLoginScreen(){
+  if(authMode !== 'login') toggleAuthMode();
+  showScreen('screen-signup');
+}
 
 function toggleAuthMode(){
   authMode = authMode === 'signup' ? 'login' : 'signup';
@@ -736,10 +886,12 @@ document.getElementById('edit-photo-input').addEventListener('change', (e) => {
   const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    editPhoto = reader.result;
-    const picker = document.getElementById('edit-avatar-picker');
-    picker.style.backgroundImage = `url(${editPhoto})`;
-    document.getElementById('edit-avatar-emoji').style.display = 'none';
+    openAvatarCropper(reader.result, croppedDataUrl => {
+      editPhoto = croppedDataUrl;
+      const picker = document.getElementById('edit-avatar-picker');
+      picker.style.backgroundImage = `url(${editPhoto})`;
+      document.getElementById('edit-avatar-emoji').style.display = 'none';
+    });
   };
   reader.readAsDataURL(file);
   e.target.value = '';
@@ -1061,32 +1213,38 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   });
   d += ` L${xScale(endTime).toFixed(1)},${yScale(count).toFixed(1)}`;
 
-  // Fixed number of time divisions across the session, rather than clock-hour
-  // boundaries — a short session (well under an hour) still gets a full,
-  // evenly-spaced grid instead of collapsing to zero or one visible line.
+  // Real clock-aligned gridlines: hourly when the session runs long enough,
+  // stepping down to nice sub-hour intervals (30/20/15/10/5 min) so a short
+  // session still gets a genuine, readable grid instead of arbitrary divisions.
   const oneHour = 3600000;
-  const numDivisions = Math.max(2, Math.min(5, Math.round(innerW/50)));
+  const niceStepsMs = [5,10,15,20,30].map(m=>m*60000).concat([1,2,3,4,6,8,12].map(hr=>hr*oneHour));
+  let step = niceStepsMs[niceStepsMs.length-1];
+  for(const s of niceStepsMs){ if(dur/s <= 7){ step = s; break; } }
   const tickTimes = [];
-  for(let i=0; i<=numDivisions; i++) tickTimes.push(startTime + (dur*i)/numDivisions);
-  const useMinutePrecision = dur < oneHour*1.5;
+  for(let t = Math.ceil(startTime/step)*step; t <= endTime; t += step) tickTimes.push(t);
+  if(tickTimes.length===0 || tickTimes[0]-startTime > step*0.2) tickTimes.unshift(startTime);
+  if(endTime - tickTimes[tickTimes.length-1] > step*0.2) tickTimes.push(endTime);
+  const useMinutePrecision = step < oneHour;
   const formatTick = t => useMinutePrecision
     ? new Date(t).toLocaleTimeString([], { hour:'numeric', minute:'2-digit', hour12:true })
     : formatHour(t);
+  const gridColorStrong = opts.gridColorStrong || gridColor;
 
   let ticks = '';
   tickTimes.forEach((t, i) => {
     const x = xScale(t);
-    ticks += `<line x1="${x.toFixed(1)}" y1="${padT}" x2="${x.toFixed(1)}" y2="${h-padB}" stroke="${gridColor}" stroke-width="1"/>`;
+    ticks += `<line x1="${x.toFixed(1)}" y1="${padT}" x2="${x.toFixed(1)}" y2="${h-padB}" stroke="${gridColorStrong}" stroke-width="1"/>`;
     const anchor = i===0 ? 'start' : (i===tickTimes.length-1 ? 'end' : 'middle');
     ticks += `<text x="${x.toFixed(1)}" y="${h-padB+13}" text-anchor="${anchor}" font-size="9" fill="${textColor}">${formatTick(t)}</text>`;
   });
 
-  const axisLine = `<line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="${gridColor}" stroke-width="1"/>`;
+  const axisLine = `<line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="${gridColorStrong}" stroke-width="1"/>`;
 
+  // One horizontal gridline per drink logged, so every beer is a readable rung.
   let yLabels = '';
   for(let c = 0; c <= maxCount; c++){
     const y = yScale(c);
-    yLabels += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="${gridColor}" stroke-width="1"/>`;
+    yLabels += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="${gridColorStrong}" stroke-width="1"/>`;
     yLabels += `<text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="${textColor}">${c}</text>`;
   }
 
@@ -1117,7 +1275,7 @@ function renderSaveScreen(){
   tile.classList.remove('has-photos'); tile.style.backgroundImage = '';
   tile.innerHTML = `<span class="icon">${ICON_IMAGE}</span><span>Add Photos/Video</span>`;
   document.getElementById('save-chart-svg').innerHTML =
-    buildCountChart(state.entries, state.startTime, state.endTime, 130, 112, { textColor:'#767670', gridColor:'rgba(23,22,15,.08)' });
+    buildCountChart(state.entries, state.startTime, state.endTime, 130, 112, { textColor:'#767670', gridColor:'rgba(23,22,15,.16)' });
 }
 document.getElementById('save-photo-input').addEventListener('change', (e) => {
   const files = Array.from(e.target.files || []);
@@ -1289,7 +1447,7 @@ function mountPostCard(container, event, authorName, opts){
   const { html, uid } = renderPostCard(event, authorName, opts);
   container.insertAdjacentHTML('beforeend', html);
   document.getElementById(`${uid}-chart`).innerHTML =
-    buildCountChart(event.entries, event.startTime, event.endTime, 300, 244, { textColor:'#767670', gridColor:'rgba(23,22,15,.08)', pinR:10 });
+    buildCountChart(event.entries, event.startTime, event.endTime, 300, 244, { textColor:'#767670', gridColor:'rgba(23,22,15,.16)', gridColorStrong:'rgba(23,22,15,.24)', pinR:10 });
 
   const track = document.getElementById(`${uid}-track`);
   const dots = document.querySelectorAll(`#${uid}-dots .dot`);
@@ -1516,6 +1674,48 @@ function inviteAll(){
   else { copyTextToClipboard(message).then(ok => { if(ok) alert('Invite message copied.'); }); }
 }
 
+// Real device-contacts access via the Contact Picker API. This is Chrome on
+// Android only (no iOS Safari, no desktop browser support as of writing) —
+// feature-detected honestly rather than faked. Picking a contact never sends
+// anything itself: it opens a wa.me deep link with the invite pre-filled, and
+// the person still has to hit send inside WhatsApp themselves.
+function contactPickerSupported(){
+  return typeof navigator !== 'undefined' && 'contacts' in navigator && 'ContactsManager' in window
+    && typeof navigator.contacts.select === 'function';
+}
+async function pickContactsAndInvite(){
+  const list = document.getElementById('contacts-invite-list');
+  if(!contactPickerSupported()){
+    list.innerHTML = `<p class="contacts-empty-hint">Contact access isn't supported in this browser yet &mdash; it currently only works in Chrome on Android. Use "Invite friends to Rounds" below to share your link instead.</p>`;
+    return;
+  }
+  try{
+    const picked = await navigator.contacts.select(['name','tel'], { multiple:true });
+    if(!picked || picked.length === 0) return;
+    renderContactInviteList(picked);
+  } catch(err){
+    // picker cancelled or permission denied — nothing to show, no fake fallback
+  }
+}
+function renderContactInviteList(picked){
+  const list = document.getElementById('contacts-invite-list');
+  const message = `Hey! I've been logging nights out on Rounds, it's like Strava for drinks. Join me: ${window.location.origin}`;
+  const rows = picked.map(c => {
+    const name = (c.name && c.name[0]) || 'Contact';
+    const rawTel = (c.tel && c.tel[0]) || '';
+    const digits = rawTel.replace(/[^\d+]/g, '').replace(/^\+/, '');
+    if(!digits) return '';
+    const waLink = `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+    return `
+      <div class="user-row">
+        <div class="user-avatar">${ICON_PERSON}</div>
+        <div class="user-meta"><div class="user-name">${escapeHtml(name)}</div></div>
+        <a class="btn-whatsapp" href="${waLink}" target="_blank" rel="noopener">${ICON_WHATSAPP}Invite</a>
+      </div>`;
+  }).filter(Boolean).join('');
+  list.innerHTML = rows || `<p class="contacts-empty-hint">None of the contacts you picked have a phone number saved.</p>`;
+}
+
 // ---------------------------------------------------------------
 // SHARE — builds a transparent-background graph (a real PNG with
 // no baked-in card), lets you drop any photo behind it, then hands
@@ -1547,7 +1747,7 @@ function renderSharePreview(ev){
     <div class="l">Time</div><div class="v">${formatDurationShort(ev.duration)}</div>`;
   document.getElementById('share-chart-svg-modal').innerHTML =
     buildCountChart(ev.entries, ev.startTime, ev.endTime, 260, 462, {
-      textColor:'rgba(255,255,255,.92)', gridColor:'rgba(255,255,255,.22)', pinR:13,
+      textColor:'#fff', gridColor:'rgba(255,255,255,.4)', gridColorStrong:'rgba(255,255,255,.62)', pinR:13,
       padL:34, padR:16, padT:190, padB:70,
     });
 }
