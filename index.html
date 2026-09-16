@@ -49,7 +49,10 @@
   /* ---- buttons / inputs ---- */
   .btn{ display:flex; align-items:center; justify-content:center; font-family:var(--font-sans); font-weight:600; font-size:16px; border:none; border-radius:100px; cursor:pointer; padding:15px 20px; width:100%; transition:transform .12s ease; }
   .btn:active{ transform:scale(.97); }
-  .btn-primary{ background:var(--primary); color:#fff; }
+  /* solid-fill + white text uses --primary-dim rather than --primary: 5.6:1 vs 3.4:1
+     contrast against white, so button labels clear WCAG AA (4.5:1) without
+     introducing a colour outside the existing palette. */
+  .btn-primary{ background:var(--primary-dim); color:#fff; }
   .btn-ghost{ background:transparent; color:var(--ink); border:1px solid var(--line); }
   .btn-danger{ background:var(--danger); color:#fff; }
   .btn + .btn{ margin-top:10px; }
@@ -94,6 +97,7 @@
   .field-error.show{ display:block; }
   .field-success{ color:#3DBE6B; font-size:13px; margin:-4px 0 14px 4px; display:none; line-height:1.5; }
   .field-success.show{ display:block; }
+  .field-hint{ color:var(--muted); font-size:12.5px; margin:-4px 0 14px 4px; line-height:1.5; }
 
   /* ---- mode select: clean list rows ---- */
   #screen-setup.active{ display:flex; flex-direction:column; }
@@ -179,15 +183,17 @@
   .carousel-dots .dot.active{ background:var(--primary); transform:scale(1.25); }
 
   .post-actions{ display:flex; gap:4px; padding-top:12px; border-top:1px solid var(--line); }
-  .post-action-btn{ flex:1; display:flex; align-items:center; justify-content:center; gap:7px; background:none; border:none; border-radius:10px; padding:9px; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; }
+  .post-action-btn{ flex:1; display:flex; align-items:center; justify-content:center; gap:7px; background:none; border:none; border-radius:10px; padding:9px; font-size:12.5px; font-weight:600; color:var(--muted); cursor:pointer; transition:transform .12s ease; }
   .post-action-btn.liked{ color:var(--primary-light); }
+  .post-action-btn:active{ transform:scale(.94); }
   .comment-box{ margin-top:12px; }
 
   /* ---- share modal (kept dark — matches Strava's own dark, photo-overlay share export, in both themes) ---- */
   .share-modal{ position:fixed; inset:0; background:rgba(6,4,3,.96); z-index:60; display:none; flex-direction:column; }
   .share-modal.active{ display:flex; }
   .share-modal-header{ display:flex; align-items:center; justify-content:space-between; padding:16px 18px 8px; flex:none; }
-  .share-close{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; color:#fff; cursor:pointer; border:none; }
+  .share-close{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.1); display:flex; align-items:center; justify-content:center; color:#fff; cursor:pointer; border:none; transition:transform .12s ease; }
+  .share-close:active{ transform:scale(.9); }
   .share-modal-title{ font-family:var(--font-sans); font-weight:700; font-size:16px; color:#fff; }
   .share-modal-spacer{ width:34px; }
 
@@ -214,7 +220,8 @@
   .share-hint{ text-align:center; color:rgba(255,255,255,.5); font-size:11.5px; padding:10px 30px 2px; max-width:34ch; }
 
   .share-icons-row{ display:flex; gap:22px; padding:20px 24px 4px; overflow-x:auto; flex:none; }
-  .share-icon-item{ display:flex; flex-direction:column; align-items:center; gap:8px; font-size:11px; color:#ddd; cursor:pointer; flex:none; width:58px; background:none; border:none; font-family:var(--font-sans); }
+  .share-icon-item{ display:flex; flex-direction:column; align-items:center; gap:8px; font-size:11px; color:#ddd; cursor:pointer; flex:none; width:58px; background:none; border:none; font-family:var(--font-sans); transition:transform .12s ease; }
+  .share-icon-item:active{ transform:scale(.92); }
   .share-icon-circle{ width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; color:#fff; }
   .share-icon-circle.ig{ background:radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
   .share-icon-circle.wa{ background:#25D366; }
@@ -222,18 +229,20 @@
   .share-icon-circle.more{ background:#3A3A3C; }
 
   .share-fallback-row{ display:flex; gap:10px; padding:14px 24px 28px; flex:none; }
-  .share-fallback-row button{ flex:1; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#fff; font-family:var(--font-sans); font-weight:600; font-size:13px; border-radius:100px; padding:12px; cursor:pointer; }
+  .share-fallback-row button{ flex:1; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:#fff; font-family:var(--font-sans); font-weight:600; font-size:13px; border-radius:100px; padding:12px; cursor:pointer; transition:transform .12s ease; }
+  .share-fallback-row button:active{ transform:scale(.96); }
   input[type=file]#share-photo-input{ display:none; }
   .comment-row{ display:flex; gap:8px; font-size:12.5px; color:var(--muted); padding:6px 2px; }
   .comment-row b{ color:var(--ink); }
   .comment-input-row{ display:flex; gap:8px; margin-top:10px; }
   .comment-input-row input{ flex:1; background:var(--surface2); border:1px solid transparent; border-radius:100px; padding:9px 14px; color:var(--ink); font-family:var(--font-sans); font-size:12.5px; }
   .comment-input-row input:focus{ outline:none; border-color:var(--primary); }
-  .comment-send{ background:var(--primary); color:#fff; border:none; border-radius:100px; padding:0 16px; font-weight:700; font-size:12.5px; }
+  .comment-send{ background:var(--primary-dim); color:#fff; border:none; border-radius:100px; padding:0 16px; font-weight:700; font-size:12.5px; }
 
   /* ---- feed / profile top bars ---- */
   .top-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-  .icon-circle{ width:38px; height:38px; border-radius:50%; background:var(--surface2); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink); }
+  .icon-circle{ width:38px; height:38px; border-radius:50%; background:var(--surface2); border:none; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink); transition:transform .12s ease; }
+  .icon-circle:active{ transform:scale(.92); }
 
   /* ---- profile header ---- */
   .profile-header{ display:flex; align-items:center; gap:16px; margin-bottom:16px; }
@@ -243,12 +252,14 @@
   .follow-row{ color:var(--muted); font-size:14px; margin:13px 0 16px; }
   .follow-row b{ color:var(--ink); }
   .profile-actions{ display:flex; gap:10px; margin-bottom:16px; }
-  .profile-actions button{ flex:1; background:transparent; border:1px solid var(--line); color:var(--ink); font-family:var(--font-sans); font-weight:600; font-size:13.5px; border-radius:100px; padding:11px; cursor:pointer; }
+  .profile-actions button{ flex:1; background:transparent; border:1px solid var(--line); color:var(--ink); font-family:var(--font-sans); font-weight:600; font-size:13.5px; border-radius:100px; padding:11px; cursor:pointer; transition:transform .12s ease; }
+  .profile-actions button:active{ transform:scale(.96); background:var(--surface2); }
   .theme-switcher{ display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; }
   .theme-switcher-label{ font-size:13px; color:var(--muted); font-weight:600; }
   .theme-switcher-control{ display:flex; background:var(--surface2); border-radius:100px; padding:3px; gap:2px; }
-  .theme-opt{ display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--muted); font-family:var(--font-sans); font-weight:600; font-size:12.5px; padding:7px 13px; border-radius:100px; cursor:pointer; }
+  .theme-opt{ display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--muted); font-family:var(--font-sans); font-weight:600; font-size:12.5px; padding:7px 13px; border-radius:100px; cursor:pointer; transition:transform .12s ease; }
   .theme-opt.active{ background:var(--surface); color:var(--ink); }
+  .theme-opt:active{ transform:scale(.94); }
   .divider{ height:1px; background:var(--line); margin:0 0 22px; }
 
   /* ---- find friends ---- */
@@ -260,10 +271,12 @@
   .user-meta{ flex:1; }
   .user-name{ font-family:var(--font-sans); font-weight:700; font-size:14.5px; color:var(--ink); }
   .user-handle{ color:var(--muted); font-size:12px; margin-top:2px; }
-  .btn-request{ background:var(--primary); color:#fff; border:none; font-family:var(--font-sans); font-weight:700; font-size:12.5px; border-radius:100px; padding:8px 16px; white-space:nowrap; cursor:pointer; }
+  .btn-request{ background:var(--primary-dim); color:#fff; border:none; font-family:var(--font-sans); font-weight:700; font-size:12.5px; border-radius:100px; padding:8px 16px; white-space:nowrap; cursor:pointer; transition:transform .12s ease; }
+  .btn-request:active{ transform:scale(.94); }
   .btn-requested{ background:transparent; color:var(--muted); border:1px solid var(--line); font-family:var(--font-sans); font-weight:600; font-size:12.5px; border-radius:100px; padding:8px 16px; white-space:nowrap; }
   .btn-following{ background:var(--primary-tint); color:var(--primary-light); border:none; font-family:var(--font-sans); font-weight:600; font-size:12.5px; border-radius:100px; padding:8px 16px; white-space:nowrap; }
-  .btn-whatsapp{ display:flex; align-items:center; gap:6px; background:transparent; color:var(--whatsapp); border:1px solid var(--whatsapp); font-family:var(--font-sans); font-weight:700; font-size:12.5px; border-radius:100px; padding:8px 14px; white-space:nowrap; cursor:pointer; }
+  .btn-whatsapp{ display:flex; align-items:center; gap:6px; background:transparent; color:var(--whatsapp); border:1px solid var(--whatsapp); font-family:var(--font-sans); font-weight:700; font-size:12.5px; border-radius:100px; padding:8px 14px; white-space:nowrap; cursor:pointer; transition:transform .12s ease; }
+  .btn-whatsapp:active{ transform:scale(.94); }
   .divider-row{ display:flex; align-items:center; gap:12px; margin:24px 0; }
   .divider-row .line{ flex:1; height:1px; background:var(--line); }
   .divider-row span{ color:var(--muted); font-size:12.5px; }
@@ -271,17 +284,20 @@
   .contacts-card svg{ margin-bottom:12px; color:var(--primary-light); }
   .contacts-card h3{ font-family:var(--font-display); font-weight:400; font-size:18px; text-transform:uppercase; margin:0 0 7px; color:var(--ink); }
   .contacts-card p{ color:var(--muted); font-size:12.5px; line-height:1.55; margin:0 0 17px; }
-  .btn-connect{ width:100%; background:var(--primary); color:#fff; border:none; font-family:var(--font-sans); font-weight:700; font-size:14px; border-radius:100px; padding:13px; cursor:pointer; }
+  .btn-connect{ width:100%; background:var(--primary-dim); color:#fff; border:none; font-family:var(--font-sans); font-weight:700; font-size:14px; border-radius:100px; padding:13px; cursor:pointer; transition:transform .12s ease; }
+  .btn-connect:active{ transform:scale(.97); }
   .btn-connected{ width:100%; background:transparent; border:1px solid var(--line); color:var(--muted); font-family:var(--font-sans); font-weight:600; font-size:13px; border-radius:100px; padding:11px; text-align:center; }
   .section-heading{ font-family:var(--font-sans); font-weight:700; font-size:13px; margin:20px 0 5px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
 
   /* ---- bottom nav (3 items) ---- */
   .bottom-nav{ position:fixed; bottom:0; left:0; right:0; display:flex; justify-content:center; z-index:40; background:var(--surface); border-top:1px solid var(--line); }
   .bottom-nav-inner{ width:100%; max-width:430px; display:flex; justify-content:space-around; align-items:center; padding:10px 10px 20px; }
-  .nav-item{ display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--muted); font-size:10.5px; cursor:pointer; background:none; border:none; font-family:var(--font-sans); font-weight:500; }
+  .nav-item{ display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--muted); font-size:10.5px; cursor:pointer; background:none; border:none; font-family:var(--font-sans); font-weight:500; transition:transform .12s ease; }
   .nav-item.active{ color:var(--ink); }
   .nav-item .ic{ font-size:19px; }
-  .nav-record{ width:52px; height:52px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:24px; margin-top:-22px; border:4px solid var(--surface); color:#fff; cursor:pointer; }
+  .nav-item:active{ transform:scale(.92); }
+  .nav-record{ width:52px; height:52px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-size:24px; margin-top:-22px; border:4px solid var(--surface); color:#fff; cursor:pointer; transition:transform .12s ease; }
+  .nav-record:active{ transform:scale(.9); }
 
   @media (max-width:360px){ .timer{font-size:42px;} .start-ring{width:150px;height:150px;} }
 </style>
@@ -355,8 +371,8 @@
     </div>
     <div class="follow-row" id="you-follow-row">0 followers &nbsp;&bull;&nbsp; 0 following</div>
     <div class="profile-actions">
-      <button title="Coming soon">Edit profile</button>
-      <button title="Coming soon">Share profile</button>
+      <button onclick="openEditProfile()">Edit profile</button>
+      <button onclick="openShareProfile()">Share profile</button>
     </div>
     <div class="theme-switcher">
       <span class="theme-switcher-label">Appearance</span>
@@ -369,12 +385,52 @@
     <div id="you-body"></div>
   </section>
 
+  <!-- EDIT PROFILE -->
+  <section id="screen-edit-profile" class="screen no-nav">
+    <a class="back-link" onclick="showScreen('screen-you')">&larr; Back</a>
+    <div class="wordmark">Edit profile</div>
+    <h1>Update your<br/>profile.</h1>
+
+    <div class="avatar-picker" id="edit-avatar-picker" onclick="document.getElementById('edit-photo-input').click()">
+      <span id="edit-avatar-emoji"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"></circle><path d="M4.8 19.8c1.4-3.6 4.2-5.6 7.2-5.6s5.8 2 7.2 5.6"></path></svg></span>
+      <div class="badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"></line><line x1="4" y1="12" x2="20" y2="12"></line></svg></div>
+    </div>
+    <input type="file" id="edit-photo-input" accept="image/*" />
+
+    <input id="edit-name" class="text-input" placeholder="Full name" />
+    <div class="field-error" id="edit-name-error">Enter a name.</div>
+
+    <div id="edit-password-block">
+      <input id="edit-password" class="text-input" type="password" placeholder="New password (leave blank to keep current)" />
+      <input id="edit-password-confirm" class="text-input" type="password" placeholder="Confirm new password" />
+    </div>
+    <div class="field-hint" id="edit-google-note" style="display:none;">You sign in with Google, so there's no Rounds password to change here.</div>
+
+    <div class="field-error" id="edit-form-error"></div>
+    <div class="field-success" id="edit-form-success">Profile updated.</div>
+
+    <button class="btn btn-primary" id="edit-submit-btn" onclick="submitEditProfile()">Save changes</button>
+  </section>
+
+  <!-- SHARE PROFILE -->
+  <section id="screen-share-profile" class="screen no-nav">
+    <a class="back-link" onclick="showScreen('screen-you')">&larr; Back</a>
+    <div class="wordmark">Share profile</div>
+    <h1>Bring people<br/>along.</h1>
+    <p class="sub">Customise the message, then send it wherever your friends are.</p>
+
+    <textarea id="share-profile-message" class="text-area" rows="5"></textarea>
+
+    <button class="btn btn-primary" id="share-profile-send-btn" onclick="shareProfileMessage()" style="margin-top:2px;">Share</button>
+    <button class="btn btn-ghost" onclick="copyProfileMessage(this)" style="margin-top:10px;">Copy message</button>
+  </section>
+
   <!-- FIND FRIENDS -->
   <section id="screen-find-friends" class="screen no-nav">
     <a class="back-link" onclick="showScreen('screen-feed')">&larr; Back</a>
     <div class="wordmark">Find friends</div>
     <h1>Add people.</h1>
-    <p class="sub">Search a username to follow them — their rounds show up in your feed right away.</p>
+    <p class="sub">Search a username to follow them. Their rounds show up in your feed right away.</p>
 
     <div class="search-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.6" y2="16.6"></line></svg><input id="username-search" placeholder="Search by username" oninput="renderUsernameResults()" /></div>
     <div id="username-results"></div>
@@ -420,7 +476,7 @@
       <video id="video" autoplay playsinline muted></video>
       <div class="vf-fallback" id="vf-fallback" style="display:none;">
         <span class="icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"></path><circle cx="12" cy="13" r="3.4"></circle></svg></span>
-        Camera preview isn't available in this window — logging a round will open your device camera instead.
+        Camera preview isn't available in this window. Logging a round will open your device camera instead.
       </div>
       <div class="rec-chip"><span class="rec-dot"></span>REC</div>
       <div class="flash" id="flash"></div>
@@ -478,7 +534,7 @@
     </div>
     <button class="share-add-photo-btn" onclick="document.getElementById('share-photo-input').click()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"></rect><circle cx="8.5" cy="10" r="1.6"></circle><path d="M21 16.5l-5.6-5.6a1.5 1.5 0 0 0-2.1 0L4 20"></path></svg><span id="share-photo-btn-label">Add a photo behind it</span></button>
     <input type="file" id="share-photo-input" accept="image/*" />
-    <div class="share-hint">Tapping an app below opens your device's real share sheet — pick Instagram, WhatsApp or Messages from there.</div>
+    <div class="share-hint">Tapping an app below opens your device's real share sheet. Pick Instagram, WhatsApp or Messages from there.</div>
   </div>
 
   <div class="share-icons-row">
@@ -507,6 +563,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;   // real profile row: { id, username, display_name, photo_url, provider }
 let authMode = 'signup';  // 'signup' | 'login' — which the signup screen's form currently does
 let signupPhoto = null;
+let editPhoto = null; // data URL of a newly-picked photo on the Edit Profile screen, pending save
 const eventCache = new Map(); // id -> event object currently mounted on screen (for cheers/comments/share)
 
 const state = {
@@ -666,7 +723,139 @@ async function uploadOwnAvatar(dataUrl){
   if(!user) return;
   const url = await uploadDataUrlToStorage(dataUrl, `${user.id}/avatar.jpg`);
   await sb.from('profiles').update({ photo_url: url }).eq('id', user.id);
-  if(currentUser) currentUser.photo_url = url;
+  if(currentUser) currentUser.photo = url;
+  return url;
+}
+
+// ---------------------------------------------------------------
+// EDIT PROFILE — real updates: profiles.display_name / photo_url via
+// Storage + the table, and auth password via sb.auth.updateUser. Password
+// is only offered for email/password accounts; Google accounts have
+// nothing on our side to change.
+// ---------------------------------------------------------------
+document.getElementById('edit-photo-input').addEventListener('change', (e) => {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    editPhoto = reader.result;
+    const picker = document.getElementById('edit-avatar-picker');
+    picker.style.backgroundImage = `url(${editPhoto})`;
+    document.getElementById('edit-avatar-emoji').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+function openEditProfile(){
+  if(!currentUser) return;
+  editPhoto = null;
+  document.getElementById('edit-name').value = currentUser.name || '';
+  document.getElementById('edit-password').value = '';
+  document.getElementById('edit-password-confirm').value = '';
+  const picker = document.getElementById('edit-avatar-picker');
+  if(currentUser.photo){
+    picker.style.backgroundImage = `url(${currentUser.photo})`;
+    document.getElementById('edit-avatar-emoji').style.display = 'none';
+  } else {
+    picker.style.backgroundImage = '';
+    document.getElementById('edit-avatar-emoji').style.display = '';
+  }
+  const isGoogle = currentUser.provider === 'google';
+  document.getElementById('edit-password-block').style.display = isGoogle ? 'none' : '';
+  document.getElementById('edit-google-note').style.display = isGoogle ? 'block' : 'none';
+  document.getElementById('edit-name-error').classList.remove('show');
+  document.getElementById('edit-form-error').classList.remove('show');
+  document.getElementById('edit-form-success').classList.remove('show');
+  showScreen('screen-edit-profile');
+}
+
+async function submitEditProfile(){
+  const name = document.getElementById('edit-name').value.trim();
+  const password = document.getElementById('edit-password').value;
+  const passwordConfirm = document.getElementById('edit-password-confirm').value;
+  const nameErr = document.getElementById('edit-name-error');
+  const formErr = document.getElementById('edit-form-error');
+  const formOk = document.getElementById('edit-form-success');
+  nameErr.classList.remove('show'); formErr.classList.remove('show'); formOk.classList.remove('show');
+
+  if(!name){ nameErr.classList.add('show'); return; }
+  if(currentUser.provider !== 'google' && password && password !== passwordConfirm){
+    formErr.textContent = "New passwords don't match.";
+    formErr.classList.add('show');
+    return;
+  }
+  if(currentUser.provider !== 'google' && password && password.length < 6){
+    formErr.textContent = 'Password needs to be at least 6 characters.';
+    formErr.classList.add('show');
+    return;
+  }
+
+  const btn = document.getElementById('edit-submit-btn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  try{
+    if(editPhoto) await uploadOwnAvatar(editPhoto);
+    const { error: profileError } = await sb.from('profiles').update({ display_name: name }).eq('id', currentUser.id);
+    if(profileError) throw profileError;
+    currentUser.name = name;
+
+    if(currentUser.provider !== 'google' && password){
+      const { error: pwError } = await sb.auth.updateUser({ password });
+      if(pwError) throw pwError;
+    }
+
+    editPhoto = null;
+    document.getElementById('edit-password').value = '';
+    document.getElementById('edit-password-confirm').value = '';
+    formOk.classList.add('show');
+    renderYou();
+  } catch(err){
+    formErr.textContent = err.message || "Couldn't save those changes. Try again.";
+    formErr.classList.add('show');
+  } finally {
+    btn.disabled = false; btn.textContent = originalLabel;
+  }
+}
+
+// ---------------------------------------------------------------
+// SHARE PROFILE — a Strava-style customisable, copyable invite message
+// (not a live public profile link, Rounds doesn't have those yet) built
+// from the real deployed origin, editable before it goes out.
+// ---------------------------------------------------------------
+function defaultProfileShareMessage(){
+  const name = currentUser ? currentUser.name : 'I';
+  return `${name} on Rounds: tracking nights out, one round at a time. Come follow along and log your own: ${window.location.origin}`;
+}
+
+function openShareProfile(){
+  if(!currentUser) return;
+  document.getElementById('share-profile-message').value = defaultProfileShareMessage();
+  showScreen('screen-share-profile');
+}
+
+async function shareProfileMessage(){
+  const message = document.getElementById('share-profile-message').value.trim();
+  if(!message) return;
+  if(navigator.share){
+    try{ await navigator.share({ text: message }); } catch(err){ /* user cancelled */ }
+    return;
+  }
+  copyProfileMessage();
+}
+
+function copyProfileMessage(btnEl){
+  const message = document.getElementById('share-profile-message').value.trim();
+  if(!message) return;
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(message).then(() => {
+      if(btnEl){
+        const original = btnEl.textContent;
+        btnEl.textContent = 'Copied';
+        setTimeout(() => { btnEl.textContent = original; }, 1500);
+      }
+    });
+  }
 }
 
 async function logout(){
@@ -855,18 +1044,24 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   });
   d += ` L${xScale(endTime).toFixed(1)},${yScale(count).toFixed(1)}`;
 
+  // Fixed number of time divisions across the session, rather than clock-hour
+  // boundaries — a short session (well under an hour) still gets a full,
+  // evenly-spaced grid instead of collapsing to zero or one visible line.
   const oneHour = 3600000;
-  let tickTimes = [];
-  let firstTick = new Date(startTime); firstTick.setMinutes(0,0,0);
-  if(firstTick.getTime() <= startTime) firstTick = new Date(firstTick.getTime()+oneHour);
-  for(let t=firstTick.getTime(); t<endTime; t+=oneHour) tickTimes.push(t);
-  if(tickTimes.length === 0) tickTimes = [startTime, endTime];
+  const numDivisions = Math.max(2, Math.min(5, Math.round(innerW/50)));
+  const tickTimes = [];
+  for(let i=0; i<=numDivisions; i++) tickTimes.push(startTime + (dur*i)/numDivisions);
+  const useMinutePrecision = dur < oneHour*1.5;
+  const formatTick = t => useMinutePrecision
+    ? new Date(t).toLocaleTimeString([], { hour:'numeric', minute:'2-digit', hour12:true })
+    : formatHour(t);
 
   let ticks = '';
-  tickTimes.forEach(t => {
+  tickTimes.forEach((t, i) => {
     const x = xScale(t);
     ticks += `<line x1="${x.toFixed(1)}" y1="${padT}" x2="${x.toFixed(1)}" y2="${h-padB}" stroke="${gridColor}" stroke-width="1"/>`;
-    ticks += `<text x="${x.toFixed(1)}" y="${h-padB+13}" text-anchor="middle" font-size="9" fill="${textColor}">${formatHour(t)}</text>`;
+    const anchor = i===0 ? 'start' : (i===tickTimes.length-1 ? 'end' : 'middle');
+    ticks += `<text x="${x.toFixed(1)}" y="${h-padB+13}" text-anchor="${anchor}" font-size="9" fill="${textColor}">${formatTick(t)}</text>`;
   });
 
   const axisLine = `<line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="${gridColor}" stroke-width="1"/>`;
@@ -969,7 +1164,7 @@ async function publishEvent(){
 
     await goToYou();
   }catch(err){
-    alert("Couldn't post that — " + (err.message || 'check your connection and try again.'));
+    alert("Couldn't post that. " + (err.message || 'Check your connection and try again.'));
   }finally{
     btn.disabled = false; btn.textContent = originalLabel;
   }
@@ -1162,7 +1357,7 @@ async function submitComment(eventId, uid){
   if(!text) return;
   input.value = '';
   const { error } = await sb.from('comments').insert({ event_id: eventId, user_id: currentUser.id, body: text });
-  if(error){ alert("Couldn't post that comment — " + error.message); return; }
+  if(error){ alert("Couldn't post that comment. " + error.message); return; }
   if(ev) ev.commentsCount = (ev.commentsCount || 0) + 1;
   document.getElementById(`${uid}-commentbtn`).innerHTML = `${ICON_COMMENT} Comment <span>(${ev ? ev.commentsCount : ''})</span>`;
   await renderComments(eventId, uid);
@@ -1192,7 +1387,7 @@ async function renderFeed(){
     .select('*, profiles!events_user_id_fkey(display_name, photo_url)')
     .in('user_id', followingIds)
     .order('posted_at', { ascending: false });
-  if(error){ body.innerHTML = `<div class="empty">Couldn't load your feed — check your connection.</div>`; return; }
+  if(error){ body.innerHTML = `<div class="empty">Couldn't load your feed. Check your connection.</div>`; return; }
 
   const cheeredSet = await viewerCheeredEventIds();
   const events = (rows || []).map(r => normalizeEventRow(r, cheeredSet));
@@ -1234,12 +1429,18 @@ async function renderYou(){
   ]);
   document.getElementById('you-follow-row').innerHTML = `${followerCount||0} followers &nbsp;&bull;&nbsp; <b>${followingCount||0}</b> following`;
 
-  if(error){ body.innerHTML = `<div class="empty">Couldn't load your sessions — check your connection.</div>`; return; }
+  if(error){ body.innerHTML = `<div class="empty">Couldn't load your sessions. Check your connection.</div>`; return; }
   const events = (rows || []).map(r => normalizeEventRow(r));
   document.getElementById('you-sub').textContent = `${events.length} session${events.length===1?'':'s'} logged`;
 
   if(events.length === 0){
-    body.innerHTML = `<div class="empty">Nothing posted yet. Tap the + button to log your first night.</div>`;
+    body.innerHTML = `
+      <div class="empty-hero">
+        <div class="emoji">🍹</div>
+        <div class="title">Nothing here yet.</div>
+        <div class="copy">Log your first night to start tracking your rounds.</div>
+        <button class="btn btn-primary" onclick="beginNewEvent()" style="width:auto;">Log a round</button>
+      </div>`;
     return;
   }
   body.innerHTML = '';
@@ -1280,20 +1481,20 @@ function userRowHtml(d, followingSet){
 async function followUser(id){
   if(!currentUser) return;
   const { error } = await sb.from('follows').insert({ follower_id: currentUser.id, following_id: id });
-  if(error){ alert("Couldn't follow — " + error.message); return; }
+  if(error){ alert("Couldn't follow. " + error.message); return; }
   await renderUsernameResults();
   renderFeed();
 }
 async function unfollowUser(id){
   if(!currentUser) return;
   const { error } = await sb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', id);
-  if(error){ alert("Couldn't unfollow — " + error.message); return; }
+  if(error){ alert("Couldn't unfollow. " + error.message); return; }
   await renderUsernameResults();
   renderFeed();
 }
 
 function inviteAll(){
-  const message = `Hey! I've been logging nights out on Rounds, it's like Strava for drinks. Join me: https://rounds.app/invite`;
+  const message = `Hey! I've been logging nights out on Rounds, it's like Strava for drinks. Join me: ${window.location.origin}`;
   if(navigator.share){ navigator.share({ text: message }).catch(() => {}); }
   else if(navigator.clipboard){ navigator.clipboard.writeText(message); }
 }
@@ -1365,7 +1566,7 @@ async function downloadShareImage(){
 }
 
 function copyShareLink(){
-  const message = "Check out my rounds on Rounds: https://rounds.app/s/demo";
+  const message = `Check out my rounds on Rounds: ${window.location.origin}`;
   if(navigator.clipboard){
     navigator.clipboard.writeText(message).then(() => alert('Link copied.'));
   }
@@ -1387,7 +1588,7 @@ async function shareToDestination(label){
     }
     // No Web Share API (typically desktop) — fall back honestly.
     downloadCanvasAsPng(canvas);
-    alert(`This browser can't hand the image straight to ${label}, so it's been downloaded instead — attach it there manually.`);
+    alert(`This browser can't hand the image straight to ${label}, so it's been downloaded instead. Attach it there manually.`);
   }, 'image/png');
 }
 
