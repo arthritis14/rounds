@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
     --bg:#111111; --surface:#1A1A1A; --surface2:#222222;
@@ -91,6 +92,8 @@
   }
   .field-error{ color:var(--danger); font-size:12.5px; margin:-6px 0 10px 4px; display:none; }
   .field-error.show{ display:block; }
+  .field-success{ color:#3DBE6B; font-size:13px; margin:-4px 0 14px 4px; display:none; line-height:1.5; }
+  .field-success.show{ display:block; }
 
   /* ---- mode select: clean list rows ---- */
   #screen-setup.active{ display:flex; flex-direction:column; }
@@ -308,8 +311,8 @@
   <!-- SIGN UP -->
   <section id="screen-signup" class="screen no-nav">
     <a class="back-link" onclick="showScreen('screen-auth')">&larr; Back</a>
-    <div class="wordmark">Create account</div>
-    <h1>Set up your<br/>profile.</h1>
+    <div class="wordmark" id="signup-wordmark">Create account</div>
+    <h1 id="signup-heading">Set up your<br/>profile.</h1>
 
     <div class="avatar-picker" id="signup-avatar-picker" onclick="document.getElementById('signup-photo-input').click()">
       <span id="signup-avatar-emoji"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"></circle><path d="M4.8 19.8c1.4-3.6 4.2-5.6 7.2-5.6s5.8 2 7.2 5.6"></path></svg></span>
@@ -322,8 +325,10 @@
     <div class="field-error" id="signup-email-error">Enter a valid email address.</div>
     <input id="signup-password" class="text-input" type="password" placeholder="Password" />
     <div class="field-error" id="signup-form-error">Fill in your name, email and password to continue.</div>
+    <div class="field-success" id="signup-form-success">Check your email to confirm your account, then come back and log in.</div>
 
-    <button class="btn btn-primary" onclick="submitSignup()">Create account</button>
+    <button class="btn btn-primary" id="signup-submit-btn" onclick="submitAuthForm()">Create account</button>
+    <a class="back-link" id="auth-mode-toggle" onclick="toggleAuthMode()" style="display:block; text-align:center; margin-top:14px;">Already have an account? Log in</a>
   </section>
 
   <!-- FEED (landing) -->
@@ -369,21 +374,14 @@
     <a class="back-link" onclick="showScreen('screen-feed')">&larr; Back</a>
     <div class="wordmark">Find friends</div>
     <h1>Add people.</h1>
-    <p class="sub">They'll show up in your feed once they accept.</p>
+    <p class="sub">Search a username to follow them — their rounds show up in your feed right away.</p>
 
     <div class="search-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.6" y2="16.6"></line></svg><input id="username-search" placeholder="Search by username" oninput="renderUsernameResults()" /></div>
     <div id="username-results"></div>
 
-    <div class="divider-row"><div class="line"></div><span>or</span><div class="line"></div></div>
-
-    <div class="contacts-card" id="contacts-card">
-      <div class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"></rect><circle cx="12" cy="10" r="2.4"></circle><path d="M8.3 16.5c.7-1.6 2-2.5 3.7-2.5s3 .9 3.7 2.5"></path><line x1="2.6" y1="8" x2="5" y2="8"></line><line x1="2.6" y1="13" x2="5" y2="13"></line></svg></div>
-      <h3>Find friends from your contacts</h3>
-      <p>We'll check which of your contacts already use Rounds. We never message anyone without your say-so.</p>
-      <button class="btn-connect" onclick="connectContacts()" id="connect-contacts-btn">Connect contacts</button>
+    <div style="margin-top:20px;">
+      <button class="btn btn-ghost" onclick="inviteAll()">Invite friends to Rounds</button>
     </div>
-
-    <div id="contacts-results"></div>
   </section>
 
   <!-- SETUP -->
@@ -448,7 +446,7 @@
       </div>
     </div>
     <input type="file" id="save-photo-input" accept="image/*" multiple />
-    <button class="btn btn-primary" onclick="publishEvent()">Post</button>
+    <button class="btn btn-primary" id="publish-btn" onclick="publishEvent()">Post</button>
   </section>
 
   <div class="bottom-nav" id="bottom-nav">
@@ -498,13 +496,18 @@
 
 <script>
 // =================================================================
-// "BACKEND" — everything below is in-memory only. It stands in for
-// a real database + auth + social graph; it resets on page reload.
+// BACKEND — real Supabase project (Postgres + Auth + Storage).
+// Public anon key: safe to ship in client code, access is locked
+// down by row-level security policies on the database side.
 // =================================================================
-const account = { events: [] };              // posts made by "you"
-const social = { following: new Set(), requested: new Set() };
-let currentUser = null; // { name, email, photo, provider }
+const SUPABASE_URL = 'https://ljbhsdkpguuujbykwngt.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Nfu52QbtWDrqpXbEAH8l2A_AyXjjR89';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;   // real profile row: { id, username, display_name, photo_url, provider }
+let authMode = 'signup';  // 'signup' | 'login' — which the signup screen's form currently does
 let signupPhoto = null;
+const eventCache = new Map(); // id -> event object currently mounted on screen (for cheers/comments/share)
 
 const state = {
   mode: null, entries: [], startTime: null, endTime: null,
@@ -513,15 +516,11 @@ const state = {
 const compose = { title: '', description: '', extraPhotos: [] };
 
 // ---------------------------------------------------------------
-// PERSISTENCE — keeps you signed in and keeps an in-progress
-// session alive across a reload/app-close on this device (not a
-// real backend: still local to this browser, not synced anywhere).
+// PERSISTENCE — supabase-js keeps the auth session itself (in this
+// browser's localStorage, refreshed automatically). We only need to
+// keep an in-progress session's drink log alive across a reload.
 // ---------------------------------------------------------------
-const AUTH_KEY = 'rounds-auth';
 const SESSION_KEY = 'rounds-active-session';
-function saveAuth(){ try{ localStorage.setItem(AUTH_KEY, JSON.stringify(currentUser)); }catch(e){} }
-function loadAuth(){ try{ const raw = localStorage.getItem(AUTH_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } }
-function clearAuth(){ try{ localStorage.removeItem(AUTH_KEY); }catch(e){} }
 function saveActiveSession(){
   try{ localStorage.setItem(SESSION_KEY, JSON.stringify({ mode: state.mode, startTime: state.startTime, entries: state.entries })); }
   catch(e){ /* likely quota — photos just won't survive a reload, timer/mode still will on next save */ }
@@ -562,45 +561,7 @@ const MODE_COPY = {
   both:     { label: 'Mixed session',     badge: '🍻 Beer + cocktails' },
 };
 
-// Seed "directory" of people you could find/follow. samplePost lets us
-// demonstrate a populated feed once you follow someone, without a real backend.
-function makeSyntheticEntries(hoursAgoStart, durationMin, pattern){
-  const startTime = Date.now() - hoursAgoStart*3600000;
-  const endTime = startTime + durationMin*60000;
-  const entries = pattern.map(([frac, type]) => ({ type, time: startTime + frac*(endTime-startTime), img: null }));
-  return { startTime, endTime, entries };
-}
-const DIRECTORY = [
-  { id:'maya_f', name:'Maya Fernandes', handle:'@maya.f', onRounds:true,
-    post:(() => {
-      const t = makeSyntheticEntries(2, 190, [[0.15,'beer'],[0.32,'cocktail'],[0.5,'beer'],[0.68,'cocktail'],[0.9,'beer']]);
-      return { title:'Rooftop kickoff 🍻', description:"Started slow, ended on the rooftop with the whole crew. Solid pace all night.",
-        mode:'both', ...t, ...computeStats(t.entries, t.startTime, t.endTime), extraPhotos:[], postedAt: Date.now()-2*3600000 };
-    })() },
-  { id:'dev_kap', name:'Dev Kapoor', handle:'@dev_kap', onRounds:true,
-    post:(() => {
-      const t = makeSyntheticEntries(20, 152, [[0.2,'cocktail'],[0.5,'cocktail'],[0.8,'cocktail']]);
-      return { title:'Cocktail Tuesdays 🍸', description:"Tried the new place in Koramangala. Their espresso martini is dangerous.",
-        mode:'cocktail', ...t, ...computeStats(t.entries, t.startTime, t.endTime), extraPhotos:[], postedAt: Date.now()-20*3600000 };
-    })() },
-  { id:'priya_n', name:'Priya Nair', handle:'@priya.n', onRounds:true, post:null },
-  { id:'zoya_s', name:'Zoya Sheikh', handle:'@zoyasheikh', onRounds:true, post:null },
-  { id:'rohan_m', name:'Rohan Mehta', handle:'@rohanm', onRounds:false, post:null },
-  { id:'devika_k', name:'Devika Kapadia', handle:'@devika.k', onRounds:false, post:null },
-];
-const OFF_APP_CONTACTS = [
-  { id:'kabir_s', name:'Kabir Singh', phone:'+91 98•••••210' },
-  { id:'ananya_r', name:'Ananya Rao', phone:'+91 90•••••847' },
-  { id:'wei_l', name:'Wei Lin', phone:'+91 88•••••032' },
-];
-
-function findInDirectory(id){ return DIRECTORY.find(d => d.id === id); }
-function personById(id){ return findInDirectory(id); }
-function findEvent(origin, eventId){
-  return origin === 'account'
-    ? account.events.find(e => String(e.id) === String(eventId))
-    : DIRECTORY.flatMap(d => d.post ? [d.post] : []).find(p => String(p.id) === String(eventId));
-}
+function findEvent(eventId){ return eventCache.get(String(eventId)); }
 
 // ---------------------------------------------------------------
 // NAVIGATION
@@ -615,24 +576,28 @@ function showScreen(id){
 }
 function goToFeed(){ renderFeed(); showScreen('screen-feed'); }
 function goToYou(){ renderYou(); showScreen('screen-you'); }
-function openFindFriends(){ renderUsernameResults(); renderContactsResults(); showScreen('screen-find-friends'); }
+function openFindFriends(){ document.getElementById('username-search').value = ''; document.getElementById('username-results').innerHTML = ''; showScreen('screen-find-friends'); }
 
 // ---------------------------------------------------------------
-// AUTH — simulated. There's no real OAuth or account backend here;
-// this demonstrates the two entry points (Google / create account)
-// and hands off to the same in-memory session either way.
+// AUTH — real Supabase Auth. Google is real OAuth (opens Google,
+// comes back signed in); "Create account" is real email/password
+// signup, with a toggle to log in instead once you already have one.
 // ---------------------------------------------------------------
-function continueWithGoogle(btn){
+async function continueWithGoogle(btn){
   const label = document.getElementById('google-btn-label');
   label.textContent = 'Signing in…';
   btn.disabled = true;
-  setTimeout(() => {
-    currentUser = { name: 'Alex Rivera', email: 'alex.rivera@gmail.com', photo: null, provider: 'google' };
-    saveAuth();
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: window.location.origin + window.location.pathname }
+  });
+  if(error){
     btn.disabled = false;
     label.textContent = 'Continue with Google';
-    goToFeed();
-  }, 900);
+    alert('Could not start Google sign-in: ' + error.message);
+  }
+  // on success the browser navigates to Google and back; onAuthStateChange
+  // picks the session up when it returns.
 }
 
 document.getElementById('signup-photo-input').addEventListener('change', (e) => {
@@ -647,33 +612,75 @@ document.getElementById('signup-photo-input').addEventListener('change', (e) => 
   reader.readAsDataURL(file);
 });
 
-function submitSignup(){
+function toggleAuthMode(){
+  authMode = authMode === 'signup' ? 'login' : 'signup';
+  const isLogin = authMode === 'login';
+  document.getElementById('signup-wordmark').textContent = isLogin ? 'Log in' : 'Create account';
+  document.getElementById('signup-heading').innerHTML = isLogin ? 'Welcome<br/>back.' : 'Set up your<br/>profile.';
+  document.getElementById('signup-name').style.display = isLogin ? 'none' : '';
+  document.getElementById('signup-avatar-picker').style.display = isLogin ? 'none' : '';
+  document.getElementById('signup-submit-btn').textContent = isLogin ? 'Log in' : 'Create account';
+  document.getElementById('auth-mode-toggle').textContent = isLogin ? "Don't have an account? Create one" : 'Already have an account? Log in';
+  document.getElementById('signup-email-error').classList.remove('show');
+  document.getElementById('signup-form-error').classList.remove('show');
+  document.getElementById('signup-form-success').classList.remove('show');
+}
+
+async function submitAuthForm(){
   const name = document.getElementById('signup-name').value.trim();
   const email = document.getElementById('signup-email').value.trim();
   const password = document.getElementById('signup-password').value;
   const emailErr = document.getElementById('signup-email-error');
   const formErr = document.getElementById('signup-form-error');
-  emailErr.classList.remove('show'); formErr.classList.remove('show');
+  const formOk = document.getElementById('signup-form-success');
+  emailErr.classList.remove('show'); formErr.classList.remove('show'); formOk.classList.remove('show');
 
-  if(!name || !email || !password){ formErr.classList.add('show'); return; }
+  const isLogin = authMode === 'login';
+  if(!email || !password || (!isLogin && !name)){ formErr.textContent = 'Fill in your name, email and password to continue.'; formErr.classList.add('show'); return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ emailErr.classList.add('show'); return; }
 
-  currentUser = { name, email, photo: signupPhoto, provider: 'email' };
-  saveAuth();
-  goToFeed();
+  const btn = document.getElementById('signup-submit-btn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = isLogin ? 'Logging in…' : 'Creating account…';
+
+  if(isLogin){
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    btn.disabled = false; btn.textContent = originalLabel;
+    if(error){ formErr.textContent = error.message; formErr.classList.add('show'); return; }
+    // onAuthStateChange takes it from here
+  } else {
+    const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name } } });
+    btn.disabled = false; btn.textContent = originalLabel;
+    if(error){ formErr.textContent = error.message; formErr.classList.add('show'); return; }
+    if(data.session){
+      // no email confirmation required (or it's off) — we're signed in immediately.
+      if(signupPhoto) uploadOwnAvatar(signupPhoto).catch(()=>{});
+    } else {
+      formOk.classList.add('show');
+    }
+  }
 }
 
-function logout(){
+async function uploadOwnAvatar(dataUrl){
+  const { data: { user } } = await sb.auth.getUser();
+  if(!user) return;
+  const url = await uploadDataUrlToStorage(dataUrl, `${user.id}/avatar.jpg`);
+  await sb.from('profiles').update({ photo_url: url }).eq('id', user.id);
+  if(currentUser) currentUser.photo_url = url;
+}
+
+async function logout(){
   if(!confirm('Log out of Rounds?')) return;
+  await sb.auth.signOut();
   currentUser = null;
   signupPhoto = null;
-  clearAuth();
   clearActiveSession();
   document.getElementById('signup-name').value = '';
   document.getElementById('signup-email').value = '';
   document.getElementById('signup-password').value = '';
   document.getElementById('signup-avatar-picker').style.backgroundImage = '';
   document.getElementById('signup-avatar-emoji').style.display = '';
+  if(authMode === 'login') toggleAuthMode();
   showScreen('screen-auth');
 }
 
@@ -875,6 +882,19 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
 }
 
 // ---------------------------------------------------------------
+// STORAGE — uploads a captured photo (data URL) into this user's
+// folder in the 'photos' bucket and hands back its public URL.
+// ---------------------------------------------------------------
+async function uploadDataUrlToStorage(dataUrl, path){
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  const { error } = await sb.storage.from('photos').upload(path, blob, { contentType: blob.type || 'image/jpeg', upsert: true });
+  if(error) throw error;
+  const { data } = sb.storage.from('photos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// ---------------------------------------------------------------
 // SAVE SESSION SCREEN
 // ---------------------------------------------------------------
 function renderSaveScreen(){
@@ -911,31 +931,80 @@ function updatePhotoTile(){
   tile.innerHTML = `<span>${compose.extraPhotos.length} photo${compose.extraPhotos.length===1?'':'s'} added${more>0?' · tap to add more':''}</span>`;
 }
 
-function publishEvent(){
+async function publishEvent(){
+  if(!currentUser) return;
   compose.title = document.getElementById('save-title').value.trim();
   compose.description = document.getElementById('save-desc').value.trim();
   const stats = computeStats(state.entries, state.startTime, state.endTime);
-  const event = {
-    id: Date.now(),
-    mode: state.mode,
-    title: compose.title || 'Untitled night',
-    description: compose.description || '',
-    startTime: state.startTime,
-    endTime: state.endTime,
-    entries: state.entries,
-    extraPhotos: compose.extraPhotos,
-    ...stats,
-    postedAt: Date.now(),
-    cheered: false,
-    cheersCount: 0,
-    comments: [],
+
+  const btn = document.getElementById('publish-btn');
+  const originalLabel = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Posting…';
+
+  try{
+    const eventId = (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const uploadedEntries = await Promise.all(state.entries.map(async (e, i) => ({
+      type: e.type, time: e.time,
+      photo_url: e.img ? await uploadDataUrlToStorage(e.img, `${currentUser.id}/${eventId}/entry-${i}.jpg`) : null,
+    })));
+    const uploadedExtra = await Promise.all(compose.extraPhotos.map((img, i) =>
+      uploadDataUrlToStorage(img, `${currentUser.id}/${eventId}/extra-${i}.jpg`)));
+
+    const { error } = await sb.from('events').insert({
+      id: eventId,
+      user_id: currentUser.id,
+      mode: state.mode,
+      title: compose.title || 'Untitled night',
+      description: compose.description || '',
+      start_time: new Date(state.startTime).toISOString(),
+      end_time: new Date(state.endTime).toISOString(),
+      entries: uploadedEntries,
+      extra_photos: uploadedExtra,
+      beers: stats.beers, cocktails: stats.cocktails, total: stats.total, duration_ms: stats.duration,
+    });
+    if(error) throw error;
+
+    state.mode = null; state.entries = []; state.startTime = null; state.endTime = null;
+    compose.title = ''; compose.description = ''; compose.extraPhotos = [];
+
+    await goToYou();
+  }catch(err){
+    alert("Couldn't post that — " + (err.message || 'check your connection and try again.'));
+  }finally{
+    btn.disabled = false; btn.textContent = originalLabel;
+  }
+}
+
+// ---------------------------------------------------------------
+// DB → VIEW MODEL — turns a Supabase events row (+ joined author
+// profile) into the shape the rendering code below expects.
+// ---------------------------------------------------------------
+function normalizeEventRow(row, viewerCheeredSet){
+  const author = row.profiles ? { name: row.profiles.display_name, photo: row.profiles.photo_url } : null;
+  return {
+    id: row.id,
+    user_id: row.user_id,
+    mode: row.mode,
+    title: row.title,
+    description: row.description,
+    startTime: new Date(row.start_time).getTime(),
+    endTime: new Date(row.end_time).getTime(),
+    entries: (row.entries || []).map(e => ({ type: e.type, time: e.time, img: e.photo_url })),
+    extraPhotos: row.extra_photos || [],
+    beers: row.beers, cocktails: row.cocktails, total: row.total, duration: row.duration_ms,
+    pace: row.total > 1 ? formatDurationShort(row.duration_ms / row.total) + '/round' : '—',
+    postedAt: new Date(row.posted_at).getTime(),
+    cheersCount: row.cheers_count,
+    commentsCount: row.comments_count,
+    cheered: viewerCheeredSet ? viewerCheeredSet.has(row.id) : false,
+    author,
   };
-  account.events.unshift(event);
+}
 
-  state.mode = null; state.entries = []; state.startTime = null; state.endTime = null;
-  compose.title = ''; compose.description = ''; compose.extraPhotos = [];
-
-  goToYou();
+async function viewerCheeredEventIds(){
+  if(!currentUser) return new Set();
+  const { data } = await sb.from('cheers').select('event_id').eq('user_id', currentUser.id);
+  return new Set((data || []).map(r => r.event_id));
 }
 
 // ---------------------------------------------------------------
@@ -945,6 +1014,7 @@ let carouselSeq = 0;
 
 function renderPostCard(event, authorName, opts){
   opts = opts || {};
+  eventCache.set(String(event.id), event);
   const uid = `post-${event.id}-${carouselSeq++}`;
   const dateStr = formatRelative(event.postedAt);
 
@@ -964,10 +1034,9 @@ function renderPostCard(event, authorName, opts){
   const dotCount = (slides.match(/carousel-slide/g)||[]).length;
   const dots = Array.from({length:dotCount}).map((_,i)=>`<span class="dot${i===0?' active':''}"></span>`).join('');
 
-  const avatarStyle = (opts.editable && currentUser && currentUser.photo)
-    ? `style="background-image:url(${currentUser.photo}); background-size:cover; background-position:center;"`
-    : '';
-  const avatarContent = (opts.editable && currentUser && currentUser.photo) ? '' : ICON_PERSON;
+  const avatarSrc = opts.editable ? (currentUser && currentUser.photo) : (event.author && event.author.photo);
+  const avatarStyle = avatarSrc ? `style="background-image:url(${avatarSrc}); background-size:cover; background-position:center;"` : '';
+  const avatarContent = avatarSrc ? '' : ICON_PERSON;
 
   const html = `
     <div class="post-card" data-event-id="${event.id}">
@@ -985,17 +1054,17 @@ function renderPostCard(event, authorName, opts){
       <div class="post-carousel"><div class="carousel-track" id="${uid}-track">${slides}</div></div>
       <div class="carousel-dots" id="${uid}-dots">${dots}</div>
       <div class="post-actions">
-        <button class="post-action-btn ${event.cheered?'liked':''}" id="${uid}-cheers" onclick="toggleCheers('${event.__origin}', '${event.id}', '${uid}')">
+        <button class="post-action-btn ${event.cheered?'liked':''}" id="${uid}-cheers" onclick="toggleCheers('${event.id}', '${uid}')">
           🥂 Cheers <span>(${event.cheersCount})</span>
         </button>
-        <button class="post-action-btn" id="${uid}-commentbtn" onclick="toggleComments('${uid}')">${ICON_COMMENT} Comment <span>(${event.comments.length})</span></button>
-        <button class="post-action-btn" onclick="openShare('${event.__origin}', '${event.id}')">${ICON_SHARE} Share</button>
+        <button class="post-action-btn" id="${uid}-commentbtn" onclick="toggleComments('${event.id}', '${uid}')">${ICON_COMMENT} Comment <span>(${event.commentsCount})</span></button>
+        <button class="post-action-btn" onclick="openShare('${event.id}')">${ICON_SHARE} Share</button>
       </div>
       <div class="comment-box" id="${uid}-comments" style="display:none;">
-        <div id="${uid}-comment-list"></div>
+        <div id="${uid}-comment-list">Loading…</div>
         <div class="comment-input-row">
           <input id="${uid}-comment-input" placeholder="Add a comment" />
-          <button class="comment-send" onclick="submitComment('${event.__origin}', '${event.id}', '${uid}')">Send</button>
+          <button class="comment-send" onclick="submitComment('${event.id}', '${uid}')">Send</button>
         </div>
       </div>
       ${opts.editable ? `<input type="file" id="${uid}-addphoto" accept="image/*" multiple style="display:none;">` : ''}
@@ -1009,7 +1078,6 @@ function mountPostCard(container, event, authorName, opts){
   container.insertAdjacentHTML('beforeend', html);
   document.getElementById(`${uid}-chart`).innerHTML =
     buildCountChart(event.entries, event.startTime, event.endTime, 300, 244, { textColor:'#767670', gridColor:'rgba(23,22,15,.08)', pinR:10 });
-  renderComments(event, uid);
 
   const track = document.getElementById(`${uid}-track`);
   const dots = document.querySelectorAll(`#${uid}-dots .dot`);
@@ -1023,13 +1091,17 @@ function mountPostCard(container, event, authorName, opts){
     input.addEventListener('change', (e) => {
       const files = Array.from(e.target.files || []);
       let remaining = files.length;
+      const newPhotos = [];
       files.forEach(file => {
         const reader = new FileReader();
-        reader.onload = () => {
-          event.extraPhotos = event.extraPhotos || [];
-          event.extraPhotos.push(reader.result);
+        reader.onload = async () => {
+          newPhotos.push(reader.result);
           remaining--;
           if(remaining === 0){
+            const uploaded = await Promise.all(newPhotos.map((img, i) =>
+              uploadDataUrlToStorage(img, `${currentUser.id}/${event.id}/extra-${Date.now()}-${i}.jpg`)));
+            event.extraPhotos = (event.extraPhotos || []).concat(uploaded);
+            await sb.from('events').update({ extra_photos: event.extraPhotos }).eq('id', event.id);
             const card = container.querySelector(`[data-event-id="${event.id}"]`);
             card.remove();
             mountPostCard(container, event, authorName, opts);
@@ -1042,51 +1114,70 @@ function mountPostCard(container, event, authorName, opts){
   }
 }
 
-function toggleCheers(origin, eventId, uid){
-  const ev = origin === 'account'
-    ? account.events.find(e => String(e.id) === String(eventId))
-    : DIRECTORY.flatMap(d => d.post ? [d.post] : []).find(p => String(p.id) === String(eventId));
+async function toggleCheers(eventId, uid){
+  if(!currentUser) return;
+  const ev = findEvent(eventId);
   if(!ev) return;
-  ev.cheered = !ev.cheered;
+  const wasCheered = ev.cheered;
+  // optimistic update
+  ev.cheered = !wasCheered;
   ev.cheersCount += ev.cheered ? 1 : -1;
   const btn = document.getElementById(`${uid}-cheers`);
   btn.classList.toggle('liked', ev.cheered);
   btn.innerHTML = `🥂 Cheers <span>(${ev.cheersCount})</span>`;
+
+  const { error } = wasCheered
+    ? await sb.from('cheers').delete().eq('event_id', eventId).eq('user_id', currentUser.id)
+    : await sb.from('cheers').insert({ event_id: eventId, user_id: currentUser.id });
+  if(error){
+    // roll back on failure
+    ev.cheered = wasCheered;
+    ev.cheersCount += wasCheered ? 1 : -1;
+    btn.classList.toggle('liked', ev.cheered);
+    btn.innerHTML = `🥂 Cheers <span>(${ev.cheersCount})</span>`;
+  }
 }
-function toggleComments(uid){
+
+async function toggleComments(eventId, uid){
   const box = document.getElementById(`${uid}-comments`);
-  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+  const opening = box.style.display === 'none';
+  box.style.display = opening ? 'block' : 'none';
+  if(opening) await renderComments(eventId, uid);
 }
-function renderComments(event, uid){
+async function renderComments(eventId, uid){
   const list = document.getElementById(`${uid}-comment-list`);
-  list.innerHTML = event.comments.length === 0
+  const { data, error } = await sb.from('comments')
+    .select('body, created_at, profiles(display_name)')
+    .eq('event_id', eventId).order('created_at', { ascending: true });
+  if(error){ list.innerHTML = `<div class="comment-row" style="color:var(--muted);">Couldn't load comments.</div>`; return; }
+  list.innerHTML = !data || data.length === 0
     ? `<div class="comment-row" style="color:var(--muted);">No comments yet.</div>`
-    : event.comments.map(c => `<div class="comment-row"><b>${escapeHtml(c.author)}</b>&nbsp;${escapeHtml(c.text)}</div>`).join('');
+    : data.map(c => `<div class="comment-row"><b>${escapeHtml(c.profiles ? c.profiles.display_name : 'Someone')}</b>&nbsp;${escapeHtml(c.body)}</div>`).join('');
 }
-function submitComment(origin, eventId, uid){
-  const ev = origin === 'account'
-    ? account.events.find(e => String(e.id) === String(eventId))
-    : DIRECTORY.flatMap(d => d.post ? [d.post] : []).find(p => String(p.id) === String(eventId));
-  if(!ev) return;
+async function submitComment(eventId, uid){
+  if(!currentUser) return;
+  const ev = findEvent(eventId);
   const input = document.getElementById(`${uid}-comment-input`);
   const text = input.value.trim();
   if(!text) return;
-  ev.comments.push({ author:'You', text });
   input.value = '';
-  renderComments(ev, uid);
-  document.getElementById(`${uid}-commentbtn`).innerHTML = `${ICON_COMMENT} Comment <span>(${ev.comments.length})</span>`;
+  const { error } = await sb.from('comments').insert({ event_id: eventId, user_id: currentUser.id, body: text });
+  if(error){ alert("Couldn't post that comment — " + error.message); return; }
+  if(ev) ev.commentsCount = (ev.commentsCount || 0) + 1;
+  document.getElementById(`${uid}-commentbtn`).innerHTML = `${ICON_COMMENT} Comment <span>(${ev ? ev.commentsCount : ''})</span>`;
+  await renderComments(eventId, uid);
 }
-
-// give directory/account events an origin tag so cheers/comments know where to write back
-DIRECTORY.forEach(d => { if(d.post) d.post.__origin = d.id; if(d.post){ d.post.id = 'seed-'+d.id; d.post.cheered=false; d.post.cheersCount = Math.floor(Math.random()*6)+2; d.post.comments=[]; d.post.extraPhotos=[]; } });
 
 // ---------------------------------------------------------------
 // FEED
 // ---------------------------------------------------------------
-function renderFeed(){
+async function renderFeed(){
   const body = document.getElementById('feed-body');
-  const followedPosts = DIRECTORY.filter(d => social.following.has(d.id) && d.post);
-  if(followedPosts.length === 0){
+  if(!currentUser){ body.innerHTML = ''; return; }
+  const { data: followRows } = await sb.from('follows').select('following_id').eq('follower_id', currentUser.id);
+  const followingIds = (followRows || []).map(r => r.following_id);
+
+  if(followingIds.length === 0){
     body.innerHTML = `
       <div class="empty-hero">
         <div class="emoji">🥂</div>
@@ -1096,20 +1187,35 @@ function renderFeed(){
       </div>`;
     return;
   }
+
+  const { data: rows, error } = await sb.from('events')
+    .select('*, profiles(display_name, photo_url)')
+    .in('user_id', followingIds)
+    .order('posted_at', { ascending: false });
+  if(error){ body.innerHTML = `<div class="empty">Couldn't load your feed — check your connection.</div>`; return; }
+
+  const cheeredSet = await viewerCheeredEventIds();
+  const events = (rows || []).map(r => normalizeEventRow(r, cheeredSet));
+
+  if(events.length === 0){
+    body.innerHTML = `
+      <div class="empty-hero">
+        <div class="emoji">🥂</div>
+        <div class="title">It's quiet in here.</div>
+        <div class="copy">The people you follow haven't posted a round yet.</div>
+      </div>`;
+    return;
+  }
   body.innerHTML = '';
-  followedPosts
-    .sort((a,b) => b.post.postedAt - a.post.postedAt)
-    .forEach(d => mountPostCard(body, d.post, d.name, { editable:false }));
+  events.forEach(ev => mountPostCard(body, ev, ev.author ? ev.author.name : 'Someone', { editable:false }));
 }
 
 // ---------------------------------------------------------------
 // YOU (profile)
 // ---------------------------------------------------------------
-function renderYou(){
+async function renderYou(){
   const name = currentUser ? currentUser.name : 'You';
   document.getElementById('you-name').textContent = name;
-  document.getElementById('you-sub').textContent = `${account.events.length} session${account.events.length===1?'':'s'} logged`;
-  document.getElementById('you-follow-row').innerHTML = `0 followers &nbsp;&bull;&nbsp; <b>${social.following.size}</b> following`;
   const avatarEl = document.getElementById('you-avatar');
   if(currentUser && currentUser.photo){
     avatarEl.style.backgroundImage = `url(${currentUser.photo})`;
@@ -1119,98 +1225,73 @@ function renderYou(){
     avatarEl.innerHTML = ICON_PERSON;
   }
   const body = document.getElementById('you-body');
-  if(account.events.length === 0){
+  if(!currentUser){ body.innerHTML = ''; return; }
+
+  const [{ count: followerCount }, { count: followingCount }, { data: rows, error }] = await Promise.all([
+    sb.from('follows').select('follower_id', { count: 'exact', head: true }).eq('following_id', currentUser.id),
+    sb.from('follows').select('following_id', { count: 'exact', head: true }).eq('follower_id', currentUser.id),
+    sb.from('events').select('*').eq('user_id', currentUser.id).order('posted_at', { ascending: false }),
+  ]);
+  document.getElementById('you-follow-row').innerHTML = `${followerCount||0} followers &nbsp;&bull;&nbsp; <b>${followingCount||0}</b> following`;
+
+  if(error){ body.innerHTML = `<div class="empty">Couldn't load your sessions — check your connection.</div>`; return; }
+  const events = (rows || []).map(r => normalizeEventRow(r));
+  document.getElementById('you-sub').textContent = `${events.length} session${events.length===1?'':'s'} logged`;
+
+  if(events.length === 0){
     body.innerHTML = `<div class="empty">Nothing posted yet. Tap the + button to log your first night.</div>`;
     return;
   }
   body.innerHTML = '';
-  account.events.forEach(ev => { ev.__origin = 'account'; mountPostCard(body, ev, name, { editable:true }); });
+  events.forEach(ev => mountPostCard(body, ev, name, { editable:true }));
 }
 
 // ---------------------------------------------------------------
 // FIND FRIENDS
 // ---------------------------------------------------------------
-function renderUsernameResults(){
+async function renderUsernameResults(){
   const q = document.getElementById('username-search').value.trim().toLowerCase();
   const box = document.getElementById('username-results');
-  const results = q === '' ? [] : DIRECTORY.filter(d =>
-    d.name.toLowerCase().includes(q) || d.handle.toLowerCase().includes(q));
-  box.innerHTML = results.map(d => userRowHtml(d)).join('');
+  if(q === '' || !currentUser){ box.innerHTML = ''; return; }
+  const { data, error } = await sb.from('profiles')
+    .select('id, username, display_name')
+    .neq('id', currentUser.id)
+    .or(`username.ilike.%${q}%,display_name.ilike.%${q}%`)
+    .limit(20);
+  if(error){ box.innerHTML = ''; return; }
+  const { data: followRows } = await sb.from('follows').select('following_id').eq('follower_id', currentUser.id);
+  const followingSet = new Set((followRows || []).map(r => r.following_id));
+  box.innerHTML = (data || []).map(d => userRowHtml(d, followingSet)).join('');
 }
 
-function userRowHtml(d){
-  let btnHtml;
-  if(social.following.has(d.id)) btnHtml = `<button class="btn-following" disabled>Following</button>`;
-  else if(social.requested.has(d.id)) btnHtml = `<button class="btn-requested" disabled>Requested</button>`;
-  else btnHtml = `<button class="btn-request" onclick="sendRequest('${d.id}')">Request</button>`;
+function userRowHtml(d, followingSet){
+  const isFollowing = followingSet.has(d.id);
+  const btnHtml = isFollowing
+    ? `<button class="btn-following" onclick="unfollowUser('${d.id}')">Following</button>`
+    : `<button class="btn-request" onclick="followUser('${d.id}')">Follow</button>`;
   return `
     <div class="user-row" id="user-row-${d.id}">
       <div class="user-avatar">${ICON_PERSON}</div>
-      <div class="user-meta"><div class="user-name">${escapeHtml(d.name)}</div><div class="user-handle">${escapeHtml(d.handle)}</div></div>
+      <div class="user-meta"><div class="user-name">${escapeHtml(d.display_name)}</div><div class="user-handle">@${escapeHtml(d.username)}</div></div>
       ${btnHtml}
     </div>`;
 }
 
-function sendRequest(id){
-  social.requested.add(id);
-  refreshFriendRows();
-  // Simulates the other person accepting — there's no real backend/second
-  // user yet, so we auto-accept after a short delay to demo the full loop.
-  setTimeout(() => {
-    social.requested.delete(id);
-    social.following.add(id);
-    refreshFriendRows();
-    renderFeed();
-  }, 1800);
+async function followUser(id){
+  if(!currentUser) return;
+  const { error } = await sb.from('follows').insert({ follower_id: currentUser.id, following_id: id });
+  if(error){ alert("Couldn't follow — " + error.message); return; }
+  await renderUsernameResults();
+  renderFeed();
 }
-function refreshFriendRows(){
-  renderUsernameResults();
-  renderContactsResults();
+async function unfollowUser(id){
+  if(!currentUser) return;
+  const { error } = await sb.from('follows').delete().eq('follower_id', currentUser.id).eq('following_id', id);
+  if(error){ alert("Couldn't unfollow — " + error.message); return; }
+  await renderUsernameResults();
+  renderFeed();
 }
 
-function connectContacts(){
-  const btn = document.getElementById('connect-contacts-btn');
-  btn.textContent = 'Connecting…';
-  // Real contact-list scanning isn't available in this sandboxed browser —
-  // this simulates the result so the flow can be demoed end to end.
-  setTimeout(() => {
-    document.getElementById('contacts-card').querySelector('.btn-connect')?.remove();
-    document.getElementById('contacts-card').insertAdjacentHTML('beforeend', `<button class="btn-connected">✓ Contacts connected</button>`);
-    renderContactsResults();
-  }, 900);
-}
-
-function renderContactsResults(){
-  const box = document.getElementById('contacts-results');
-  if(!document.querySelector('#contacts-card .btn-connected')){ box.innerHTML = ''; return; }
-  const onRounds = DIRECTORY.filter(d => d.onRounds);
-  const offRounds = OFF_APP_CONTACTS;
-  box.innerHTML = `
-    <div class="section-heading">On Rounds</div>
-    ${onRounds.map(d => userRowHtml(d)).join('')}
-    <div class="section-heading">Invite to Rounds</div>
-    ${offRounds.map(c => `
-      <div class="user-row">
-        <div class="user-avatar" style="opacity:.5;">${ICON_PERSON}</div>
-        <div class="user-meta"><div class="user-name">${escapeHtml(c.name)}</div><div class="user-handle">${escapeHtml(c.phone)}</div></div>
-        <button class="btn-whatsapp" onclick="inviteContact('${escapeHtml(c.name)}', this)">💬 Invite</button>
-      </div>`).join('')}
-    <button class="btn btn-ghost" onclick="inviteAll()" style="margin-top:8px;">Invite all remaining contacts</button>
-  `;
-}
-
-function inviteContact(name, btnEl){
-  const message = `Hey! I've been logging nights out on Rounds, it's like Strava for drinks. Join me: https://rounds.app/invite`;
-  if(navigator.share){
-    navigator.share({ text: message }).catch(() => {});
-  } else if(navigator.clipboard){
-    navigator.clipboard.writeText(message).then(() => {
-      const original = btnEl.innerHTML;
-      btnEl.innerHTML = '✓ Copied';
-      setTimeout(() => { btnEl.innerHTML = original; }, 1500);
-    });
-  }
-}
 function inviteAll(){
   const message = `Hey! I've been logging nights out on Rounds, it's like Strava for drinks. Join me: https://rounds.app/invite`;
   if(navigator.share){ navigator.share({ text: message }).catch(() => {}); }
@@ -1224,12 +1305,12 @@ function inviteAll(){
 // can actually go to Instagram/WhatsApp/Messages from the device.
 // Desktop or unsupported browsers fall back to download/copy.
 // ---------------------------------------------------------------
-let shareCtx = null; // { origin, eventId, photo }
+let shareCtx = null; // { eventId, photo }
 
-function openShare(origin, eventId){
-  const ev = findEvent(origin, eventId);
+function openShare(eventId){
+  const ev = findEvent(eventId);
   if(!ev) return;
-  shareCtx = { origin, eventId, photo: null };
+  shareCtx = { eventId, photo: null };
   renderSharePreview(ev);
   document.getElementById('share-modal').classList.add('active');
 }
@@ -1258,7 +1339,7 @@ document.getElementById('share-photo-input').addEventListener('change', (e) => {
   const reader = new FileReader();
   reader.onload = () => {
     shareCtx.photo = reader.result;
-    renderSharePreview(findEvent(shareCtx.origin, shareCtx.eventId));
+    renderSharePreview(findEvent(shareCtx.eventId));
   };
   reader.readAsDataURL(file);
   e.target.value = '';
@@ -1311,14 +1392,18 @@ async function shareToDestination(label){
 }
 
 // ---------------------------------------------------------------
-// INIT
+// INIT — hydrate currentUser from the real Supabase session (Google
+// OAuth lands back here with one already set), then route screens.
 // ---------------------------------------------------------------
 initTheme();
-renderFeed();
 
-(function restoreOnLoad(){
-  const savedUser = loadAuth();
-  if(savedUser){ currentUser = savedUser; }
+async function loadOwnProfile(userId){
+  const { data, error } = await sb.from('profiles').select('*').eq('id', userId).single();
+  if(error || !data) return null;
+  return { id: data.id, username: data.username, name: data.display_name, photo: data.photo_url, provider: data.provider };
+}
+
+function resumeActiveSessionIfAny(){
   const saved = loadActiveSession();
   if(saved && saved.mode && saved.startTime){
     state.mode = saved.mode;
@@ -1331,10 +1416,35 @@ renderFeed();
     showScreen('screen-activity');
     initCamera();
     startTimer();
-  } else if(currentUser){
-    goToFeed();
+    return true;
   }
-})();
+  return false;
+}
+
+let authBootstrapped = false;
+sb.auth.onAuthStateChange(async (event, session) => {
+  if(session && session.user){
+    // a fresh profile row can take a beat to appear right after signup
+    // (the DB trigger runs async) — retry briefly rather than dead-end.
+    let profile = await loadOwnProfile(session.user.id);
+    for(let i = 0; !profile && i < 5; i++){ await new Promise(r => setTimeout(r, 400)); profile = await loadOwnProfile(session.user.id); }
+    currentUser = profile;
+    if(!authBootstrapped){
+      authBootstrapped = true;
+      if(!resumeActiveSessionIfAny()) goToFeed();
+    } else if(event === 'SIGNED_IN'){
+      goToFeed();
+    }
+  } else {
+    currentUser = null;
+    if(!authBootstrapped){
+      authBootstrapped = true;
+      showScreen('screen-auth');
+    } else if(event === 'SIGNED_OUT'){
+      showScreen('screen-auth');
+    }
+  }
+});
 </script>
 </body>
 </html>
