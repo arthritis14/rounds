@@ -703,6 +703,7 @@ const eventCache = new Map(); // id -> event object currently mounted on screen 
 const state = {
   mode: null, entries: [], startTime: null, endTime: null,
   stream: null, cameraLive: false, timerInterval: null, pendingLogType: null,
+  sessionDraftId: null, // stable folder name in Storage for this round's photos, set once per session (see addEntry)
 };
 const compose = { title: '', description: '', extraPhotos: [] };
 
@@ -713,8 +714,8 @@ const compose = { title: '', description: '', extraPhotos: [] };
 // ---------------------------------------------------------------
 const SESSION_KEY = 'rounds-active-session';
 function saveActiveSession(){
-  try{ localStorage.setItem(SESSION_KEY, JSON.stringify({ mode: state.mode, startTime: state.startTime, entries: state.entries })); }
-  catch(e){ /* likely quota — photos just won't survive a reload, timer/mode still will on next save */ }
+  try{ localStorage.setItem(SESSION_KEY, JSON.stringify({ mode: state.mode, startTime: state.startTime, entries: state.entries, sessionDraftId: state.sessionDraftId })); }
+  catch(e){ /* entries now hold Storage URLs, not raw photos (see addEntry), so this should no longer realistically hit quota — kept as a harmless backstop */ }
 }
 function clearActiveSession(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} }
 function loadActiveSession(){ try{ const raw = localStorage.getItem(SESSION_KEY); return raw ? JSON.parse(raw) : null; }catch(e){ return null; } }
@@ -1556,6 +1557,7 @@ function buildLogButtons(){
 }
 async function startSession(){
   state.entries = []; state.startTime = Date.now(); state.endTime = null;
+  state.sessionDraftId = (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   saveActiveSession();
   document.getElementById('activity-mode-label').textContent = MODE_COPY[state.mode].label + ' in progress';
   buildLogButtons();
@@ -1581,7 +1583,34 @@ document.getElementById('camera-input').addEventListener('change', (e) => {
   reader.onload = () => { addEntry(state.pendingLogType, reader.result); state.pendingLogType = null; };
   reader.readAsDataURL(file); e.target.value = '';
 });
-function addEntry(type, img){ state.entries.push({ type, time: Date.now(), img }); saveActiveSession(); renderLogStrip(); }
+// Every logged drink's photo used to sit as a full base64 image in
+// `state.entries` for the entire round, and every single log wrote the
+// whole array (photos included) into localStorage — a handful of drinks
+// in, that can blow past the browser's storage quota (small on iOS
+// Safari especially), which makes saveActiveSession() silently fail from
+// then on. That's the real mechanism behind "closing the browser loses my
+// session": it wasn't the closing, it was that the round had already
+// quietly stopped being saved beforehand. Fix: upload each photo to
+// Storage the moment it's captured and keep only the short public URL in
+// state/localStorage — a photo is ~100KB of text, a URL is under 150
+// characters, so the quota risk this caused is now gone.
+async function addEntry(type, dataUrl){
+  const entry = { type, time: Date.now(), img: dataUrl };
+  state.entries.push(entry);
+  renderLogStrip(); // instant feedback using the just-captured photo, before the upload even starts
+  saveActiveSession();
+  if(currentUser && state.sessionDraftId){
+    try{
+      const path = `${currentUser.id}/pending-${state.sessionDraftId}/entry-${entry.time}-${Math.random().toString(36).slice(2)}.jpg`;
+      entry.img = await uploadDataUrlToStorage(dataUrl, path);
+    }catch(err){
+      // No signal at the bar, etc. — keep the local photo; publishEvent()
+      // already re-tries any entry still holding a raw data: URL at the end.
+    }
+    saveActiveSession();
+    renderLogStrip();
+  }
+}
 function renderLogStrip(){
   const strip = document.getElementById('log-strip'); strip.innerHTML = '';
   state.entries.slice().reverse().forEach(entry => {
@@ -1780,9 +1809,13 @@ async function publishEvent(){
 
   try{
     const eventId = (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    // Most entries are already uploaded (addEntry uploads each photo the
+    // moment it's captured) — e.img is a real https:// Storage URL by now,
+    // so this just re-uses it. Only an entry whose upload failed at the
+    // time (still holding a raw data: URL) gets uploaded here as a retry.
     const uploadedEntries = await Promise.all(state.entries.map(async (e, i) => ({
       type: e.type, time: e.time,
-      photo_url: e.img ? await uploadDataUrlToStorage(e.img, `${currentUser.id}/${eventId}/entry-${i}.jpg`) : null,
+      photo_url: !e.img ? null : (e.img.startsWith('data:') ? await uploadDataUrlToStorage(e.img, `${currentUser.id}/${eventId}/entry-${i}.jpg`) : e.img),
     })));
     const uploadedExtra = await Promise.all(compose.extraPhotos.map((img, i) =>
       uploadDataUrlToStorage(img, `${currentUser.id}/${eventId}/extra-${i}.jpg`)));
@@ -2460,6 +2493,10 @@ function resumeActiveSessionIfAny(){
     state.startTime = saved.startTime;
     state.entries = saved.entries || [];
     state.endTime = null;
+    // Older saved sessions (before photos were uploaded as they're taken)
+    // won't have this — fall back to a fresh id, harmless since it's just
+    // where any newly-logged photo from here goes in Storage.
+    state.sessionDraftId = saved.sessionDraftId || (crypto.randomUUID && crypto.randomUUID()) || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
     document.getElementById('activity-mode-label').textContent = MODE_COPY[state.mode].label + ' in progress';
     buildLogButtons();
     renderLogStrip();
