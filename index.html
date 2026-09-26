@@ -2511,6 +2511,13 @@ function resumeActiveSessionIfAny(){
 let authBootstrapped = false;
 sb.auth.onAuthStateChange(async (event, session) => {
   if(session && session.user){
+    // Supabase silently re-validates/refreshes the session whenever the tab
+    // regains focus (exactly what our visibilitychange handler's
+    // sb.auth.getSession() call triggers) — and that re-fires a SIGNED_IN
+    // event even though nobody logged in again. Capture who we already
+    // thought was signed in *before* this event overwrites it, so we can
+    // tell "just switched back to the app" apart from a genuine fresh login.
+    const previousUserId = currentUser ? currentUser.id : null;
     // a fresh profile row can take a beat to appear right after signup
     // (the DB trigger runs async) — retry briefly rather than dead-end.
     let profile = await loadOwnProfile(session.user.id);
@@ -2536,6 +2543,13 @@ sb.auth.onAuthStateChange(async (event, session) => {
       if(needsUsername) openChooseUsername();
       else if(!resumeActiveSessionIfAny()) goToFeed();
     } else if(event === 'SIGNED_IN'){
+      if(previousUserId === profile.id){
+        // Same user we already had loaded — this is the refocus re-fire,
+        // not a new login. Don't yank them off whatever screen they're on;
+        // an in-progress round most of all. currentUser is refreshed above,
+        // which is all this event should actually do here.
+        return;
+      }
       if(needsUsername) openChooseUsername();
       else goToFeed();
     }
