@@ -1927,7 +1927,11 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   // Instagram-story share chart) pass explicit colours instead.
   const isLightTheme = typeof document !== 'undefined' && document.body.getAttribute('data-rounds-theme') === 'light';
   const textColor = opts.textColor || (isLightTheme ? '#5B5B60' : '#FFFFFF');
-  const gridColor = opts.gridColor || (isLightTheme ? 'rgba(0,0,0,.14)' : 'rgba(255,255,255,.26)');
+  // Darker in light mode (was too pale against the light card background and
+  // hard to see), more opaque in dark mode too — both paired with a thicker
+  // stroke below so the grid/axis lines read clearly in either theme.
+  const gridColor = opts.gridColor || (isLightTheme ? 'rgba(0,0,0,.38)' : 'rgba(255,255,255,.38)');
+  const gridStrokeWidth = opts.gridStrokeWidth || 1.75;
 
   let d = `M${xScale(startTime).toFixed(1)},${yScale(0).toFixed(1)}`;
   let count = 0, markers = '';
@@ -1975,17 +1979,17 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
     ticks += `<text x="${x.toFixed(1)}" y="${h-padB+13}" text-anchor="${anchor}" font-size="9" fill="${textColor}">${formatTick(t)}</text>`;
   });
 
-  const axisLine = `<line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="${axisColor}" stroke-width="1"/>`;
+  const axisLine = `<line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="${axisColor}" stroke-width="${gridStrokeWidth}"/>`;
   // Y-axis line, themed the same as the horizontal gridlines (white/translucent
   // on dark mode, grey on light mode) rather than the solid axisColor used for
   // the X-axis, so it reads as part of the grid rather than a second hard edge.
-  const yAxisLine = `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="${gridColor}" stroke-width="1"/>`;
+  const yAxisLine = `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="${gridColor}" stroke-width="${gridStrokeWidth}"/>`;
 
   // One horizontal gridline per drink logged, so every beer is a readable rung.
   let yLabels = '';
   for(let c = 0; c <= maxCount; c++){
     const y = yScale(c);
-    yLabels += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="${gridColor}" stroke-width="1"/>`;
+    yLabels += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="${gridColor}" stroke-width="${gridStrokeWidth}"/>`;
     yLabels += `<text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="${textColor}">${c}</text>`;
   }
 
