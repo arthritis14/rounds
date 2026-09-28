@@ -1927,10 +1927,11 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   // Instagram-story share chart) pass explicit colours instead.
   const isLightTheme = typeof document !== 'undefined' && document.body.getAttribute('data-rounds-theme') === 'light';
   const textColor = opts.textColor || (isLightTheme ? '#5B5B60' : '#FFFFFF');
-  // Darker in light mode (was too pale against the light card background and
-  // hard to see), more opaque in dark mode too — both paired with a thicker
-  // stroke below so the grid/axis lines read clearly in either theme.
-  const gridColor = opts.gridColor || (isLightTheme ? 'rgba(0,0,0,.38)' : 'rgba(255,255,255,.38)');
+  // Solid greys from the site palette rather than translucent black/white —
+  // light grey on the dark surface, dark grey on the light surface — so the
+  // grid/axis lines hold their own contrast in either theme instead of
+  // fading into the card background.
+  const gridColor = opts.gridColor || (isLightTheme ? '#4B4B50' : '#9A9A9A');
   const gridStrokeWidth = opts.gridStrokeWidth || 1.75;
 
   let d = `M${xScale(startTime).toFixed(1)},${yScale(0).toFixed(1)}`;
