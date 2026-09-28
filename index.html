@@ -232,6 +232,13 @@
   .two-col > div{ flex:1; }
   .graph-card{ background:var(--surface2); border:1px solid var(--line); border-radius:14px; padding:10px 8px 6px; position:relative; height:150px; }
   .graph-card svg{ width:100%; height:112px; display:block; }
+  /* buildCountChart()'s theme-aware grid/axis/text elements — kept as real
+     stylesheet rules (not just the fill/stroke presentation attribute the
+     markup also carries) so a chart already on screen recolours instantly
+     when data-rounds-theme flips, no re-render needed. */
+  .rc-chart-grid{ stroke:var(--chart-grid); }
+  .rc-chart-axis{ stroke:var(--chart-text); }
+  .rc-chart-text{ fill:var(--chart-text); }
   .graph-caption{ font-size:10.5px; color:var(--muted); text-align:center; margin-top:3px; }
   .photo-tile{ background:var(--surface2); border:1.5px dashed var(--line); border-radius:14px; height:150px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px; color:var(--muted); font-size:12.5px; font-weight:600; text-align:center; padding:10px; cursor:pointer; position:relative; overflow:hidden; }
   .photo-tile.has-photos{ background-size:cover; background-position:center; color:#fff; border-style:solid; }
@@ -1282,7 +1289,14 @@ async function submitAuthForm(){
 async function uploadOwnAvatar(dataUrl){
   const { data: { user } } = await sb.auth.getUser();
   if(!user) return;
-  const url = await uploadDataUrlToStorage(dataUrl, `${user.id}/avatar.jpg`);
+  // Every avatar upload overwrites the same storage path (avatar.jpg), so
+  // getPublicUrl() hands back the exact same URL as last time — the browser
+  // (and Supabase's CDN) then have no reason to think the image changed and
+  // keep showing the cached old one, even though the save genuinely
+  // succeeded. A cache-busting query param makes each upload a distinct URL
+  // so the new photo actually repaints and loads fresh bytes.
+  const rawUrl = await uploadDataUrlToStorage(dataUrl, `${user.id}/avatar.jpg`);
+  const url = `${rawUrl}?v=${Date.now()}`;
   await sb.from('profiles').update({ photo_url: url }).eq('id', user.id);
   if(currentUser) currentUser.photo = url;
   return url;
@@ -1924,14 +1938,23 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   const yScale = c => padT + innerH - (c/maxCount)*innerH;
   const sorted = [...entries].sort((a,b)=>a.time-b.time);
   // Theme-aware by default via CSS custom properties (--chart-text/--chart-grid,
-  // set per theme in :root / body[data-rounds-theme="light"]) rather than a
-  // JS snapshot of the theme at render time — a var() reference keeps
-  // resolving live, so a chart already on screen recolours the instant the
-  // theme is switched instead of needing a re-render or page reload.
-  // Callers that draw over a photo (the Instagram-story share chart) pass
-  // explicit colours instead.
+  // set per theme in :root / body[data-rounds-theme="light"]). The var() also
+  // goes on a class (below) rather than relying only on the presentation
+  // attribute — some mobile browsers don't reliably repaint an SVG
+  // presentation attribute's var() reference when the custom property
+  // changes on an ancestor, but a real stylesheet rule referencing the same
+  // var() always does, so the class is what actually guarantees the chart
+  // recolours the instant the theme is switched, with no re-render or
+  // reload needed. Callers that draw over a photo (the Instagram-story
+  // share chart) pass explicit colours instead and get no class.
+  const useThemeText = !opts.textColor;
+  const useThemeGrid = !opts.gridColor;
+  const useThemeAxis = !opts.axisColor && useThemeText;
   const textColor = opts.textColor || 'var(--chart-text)';
   const gridColor = opts.gridColor || 'var(--chart-grid)';
+  const textClass = useThemeText ? ' class="rc-chart-text"' : '';
+  const gridClass = useThemeGrid ? ' class="rc-chart-grid"' : '';
+  const axisClass = useThemeAxis ? ' class="rc-chart-axis"' : '';
   const gridStrokeWidth = opts.gridStrokeWidth || 1.75;
 
   let d = `M${xScale(startTime).toFixed(1)},${yScale(0).toFixed(1)}`;
@@ -1977,21 +2000,21 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   tickTimes.forEach((t, i) => {
     const x = xScale(t);
     const anchor = i===0 ? 'start' : (i===tickTimes.length-1 ? 'end' : 'middle');
-    ticks += `<text x="${x.toFixed(1)}" y="${h-padB+13}" text-anchor="${anchor}" font-size="9" fill="${textColor}">${formatTick(t)}</text>`;
+    ticks += `<text${textClass} x="${x.toFixed(1)}" y="${h-padB+13}" text-anchor="${anchor}" font-size="9" fill="${textColor}">${formatTick(t)}</text>`;
   });
 
-  const axisLine = `<line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="${axisColor}" stroke-width="${gridStrokeWidth}"/>`;
+  const axisLine = `<line${axisClass} x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="${axisColor}" stroke-width="${gridStrokeWidth}"/>`;
   // Y-axis line, themed the same as the horizontal gridlines (white/translucent
   // on dark mode, grey on light mode) rather than the solid axisColor used for
   // the X-axis, so it reads as part of the grid rather than a second hard edge.
-  const yAxisLine = `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="${gridColor}" stroke-width="${gridStrokeWidth}"/>`;
+  const yAxisLine = `<line${gridClass} x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="${gridColor}" stroke-width="${gridStrokeWidth}"/>`;
 
   // One horizontal gridline per drink logged, so every beer is a readable rung.
   let yLabels = '';
   for(let c = 0; c <= maxCount; c++){
     const y = yScale(c);
-    yLabels += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="${gridColor}" stroke-width="${gridStrokeWidth}"/>`;
-    yLabels += `<text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="${textColor}">${c}</text>`;
+    yLabels += `<line${gridClass} x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="${gridColor}" stroke-width="${gridStrokeWidth}"/>`;
+    yLabels += `<text${textClass} x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="${textColor}">${c}</text>`;
   }
 
   return `${yLabels}${yAxisLine}${ticks}${axisLine}<path d="${d}" fill="none" stroke="#FC4C02" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>${markers}`;
