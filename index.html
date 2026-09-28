@@ -1298,7 +1298,15 @@ async function uploadOwnAvatar(dataUrl){
   const rawUrl = await uploadDataUrlToStorage(dataUrl, `${user.id}/avatar.jpg`);
   const url = `${rawUrl}?v=${Date.now()}`;
   await sb.from('profiles').update({ photo_url: url }).eq('id', user.id);
-  if(currentUser) currentUser.photo = url;
+  if(currentUser){
+    currentUser.photo = url;
+    // Without this, the next app load reads the stale photo straight back
+    // out of localStorage (see readCachedProfile in handleAuthEvent) before
+    // the background refresh has a chance to correct it, so the old picture
+    // would flash back even though the upload above genuinely succeeded.
+    cacheProfile(currentUser);
+    refreshOwnAvatarUI();
+  }
   return url;
 }
 
@@ -2430,10 +2438,13 @@ async function renderFeed(){
 // ---------------------------------------------------------------
 // YOU (profile)
 // ---------------------------------------------------------------
-async function renderYou(){
-  const name = currentUser ? currentUser.name : 'You';
-  document.getElementById('you-name').textContent = name;
+// Updates just the You-tab avatar bubble from currentUser.photo. Split out
+// of renderYou() so a background profile refresh (refreshProfileInBackground)
+// can repaint the avatar the moment it has a fresher photo, without having
+// to run renderYou()'s full re-fetch of follow counts and every post card.
+function refreshOwnAvatarUI(){
   const avatarEl = document.getElementById('you-avatar');
+  if(!avatarEl) return;
   if(currentUser && currentUser.photo){
     avatarEl.style.backgroundImage = `url(${currentUser.photo})`;
     avatarEl.innerHTML = '';
@@ -2441,6 +2452,11 @@ async function renderYou(){
     avatarEl.style.backgroundImage = '';
     avatarEl.innerHTML = ICON_PERSON;
   }
+}
+async function renderYou(){
+  const name = currentUser ? currentUser.name : 'You';
+  document.getElementById('you-name').textContent = name;
+  refreshOwnAvatarUI();
   const body = document.getElementById('you-body');
   if(!currentUser){ body.innerHTML = ''; return; }
 
@@ -2819,7 +2835,7 @@ async function refreshProfileInBackground(userId){
     const p = await fetchOwnProfile(userId);
     if(!currentUser || currentUser.id !== userId) return;
     if(p === 'missing') return; // leave them be; a genuinely deleted account is caught on the next full sign-in
-    if(p){ currentUser = p; cacheProfile(p); return; }
+    if(p){ currentUser = p; cacheProfile(p); refreshOwnAvatarUI(); return; }
     await sleep(3000);
   }
 }
