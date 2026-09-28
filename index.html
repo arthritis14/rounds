@@ -29,6 +29,7 @@
     --bg:#111111; --surface:#1A1A1A; --surface2:#222222;
     --primary:#FF4B16; --primary-light:#FF7548; --primary-dim:#D63C0F; --primary-tint:rgba(255,75,22,.16);
     --ink:#FFFFFF; --muted:#9A9A9A; --line:#2C2C2C; --danger:#E0483A; --whatsapp:#25D366;
+    --chart-grid:#9A9A9A; --chart-text:#FFFFFF;
     --radius:16px;
     --font-sans:'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-display:'Anton', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -41,6 +42,7 @@
     --bg:#FAFAFA; --surface:#FFFFFF; --surface2:#F1F1F1;
     --primary-light:#FF6438; --primary-dim:#D63C0F; --primary-tint:#FFE9E1;
     --ink:#111111; --muted:#71717A; --line:#E5E5E5; --danger:#D64832;
+    --chart-grid:#4B4B50; --chart-text:#5B5B60;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0; overscroll-behavior:none;}
@@ -1921,17 +1923,15 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   const xScale = t => padL + ((t-startTime)/dur)*innerW;
   const yScale = c => padT + innerH - (c/maxCount)*innerH;
   const sorted = [...entries].sort((a,b)=>a.time-b.time);
-  // Theme-aware by default: white axis/gridlines in dark mode, grey in light
-  // mode, so the chart never inherits a fixed light-card palette regardless
-  // of which app theme is active. Callers that draw over a photo (the
-  // Instagram-story share chart) pass explicit colours instead.
-  const isLightTheme = typeof document !== 'undefined' && document.body.getAttribute('data-rounds-theme') === 'light';
-  const textColor = opts.textColor || (isLightTheme ? '#5B5B60' : '#FFFFFF');
-  // Solid greys from the site palette rather than translucent black/white —
-  // light grey on the dark surface, dark grey on the light surface — so the
-  // grid/axis lines hold their own contrast in either theme instead of
-  // fading into the card background.
-  const gridColor = opts.gridColor || (isLightTheme ? '#4B4B50' : '#9A9A9A');
+  // Theme-aware by default via CSS custom properties (--chart-text/--chart-grid,
+  // set per theme in :root / body[data-rounds-theme="light"]) rather than a
+  // JS snapshot of the theme at render time — a var() reference keeps
+  // resolving live, so a chart already on screen recolours the instant the
+  // theme is switched instead of needing a re-render or page reload.
+  // Callers that draw over a photo (the Instagram-story share chart) pass
+  // explicit colours instead.
+  const textColor = opts.textColor || 'var(--chart-text)';
+  const gridColor = opts.gridColor || 'var(--chart-grid)';
   const gridStrokeWidth = opts.gridStrokeWidth || 1.75;
 
   let d = `M${xScale(startTime).toFixed(1)},${yScale(0).toFixed(1)}`;
