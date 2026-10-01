@@ -352,6 +352,14 @@
   /* ---- post card. Hairline border instead of glow: elevation on a dark
      surface comes from a lighter fill, not from coloured shadows. ---- */
   @keyframes cardin{ from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:none; } }
+  /* Loading placeholders: a slow opacity pulse, no travelling shimmer. */
+  .sk{ background:var(--surface3); border-radius:8px; animation:skpulse 1.4s ease-in-out infinite; }
+  .sk-line{ height:11px; border-radius:6px; }
+  .sk-block{ aspect-ratio:16/12; border-radius:16px; margin:16px 0 12px; }
+  .post-card.skeleton{ animation:none; }
+  .post-card.skeleton .post-avatar{ background:var(--surface3); animation:skpulse 1.4s ease-in-out infinite; }
+  .profile-name:empty::before{ content:''; display:block; width:150px; height:22px; border-radius:7px; background:var(--surface3); animation:skpulse 1.4s ease-in-out infinite; }
+  @keyframes skpulse{ 0%,100%{ opacity:1; } 50%{ opacity:.45; } }
   .post-card{ background:var(--card); border:1px solid var(--line); border-radius:22px; padding:16px 16px 6px; margin-bottom:14px; box-shadow:var(--card-shadow); animation:cardin 300ms var(--ease-out) both; }
   @keyframes cheerspop{ 0%{ transform:scale(1); } 40%{ transform:scale(1.28); } 100%{ transform:scale(1); } }
   .cheers-emoji{ display:inline-block; }
@@ -502,7 +510,7 @@
   .nav-item .ic svg{ width:22px; height:22px; }
   .nav-item.active{ color:var(--ink); }
   .nav-item:active{ transform:scale(.94); }
-  .nav-record{ width:52px; height:52px; border-radius:18px; background:var(--primary-dim); display:flex; align-items:center; justify-content:center; color:#fff; cursor:pointer; transition:transform var(--press); }
+  .nav-record{ border:none; padding:0; width:52px; height:52px; border-radius:18px; background:var(--primary-dim); display:flex; align-items:center; justify-content:center; color:#fff; cursor:pointer; transition:transform var(--press); }
   .nav-record svg{ width:24px; height:24px; }
   .nav-record:active{ transform:scale(.93); }
 
@@ -531,6 +539,7 @@
     @keyframes modalfade{ from{opacity:0;} to{opacity:1;} }
     @keyframes cheerspop{ from{opacity:.6;} to{opacity:1;} }
     .start-ring::before, .start-ring::after{ animation:none; opacity:0; }
+    .sk, .post-card.skeleton .post-avatar, .profile-name:empty::before{ animation:none; }
     .auth-graph .step{ animation:none; stroke-dashoffset:0; }
     .auth-graph .pin{ animation:none; opacity:1; }
     .toast, .toast.show, .confirm-sheet, .confirm-sheet-backdrop.show .confirm-sheet{ transition-property:opacity; }
@@ -540,7 +549,7 @@
 </style>
 </head>
 <body>
-<div class="phone">
+<main class="phone">
 
   <!-- AUTH (Google or create account) -->
   <section id="screen-auth" class="screen active no-nav">
@@ -577,8 +586,8 @@
     <h1 id="signup-heading">Create your account</h1>
 
     <div class="avatar-picker" id="signup-avatar-picker" onclick="document.getElementById('signup-photo-input').click()">
-      <span id="signup-avatar-emoji"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"></circle><path d="M4.8 19.8c1.4-3.6 4.2-5.6 7.2-5.6s5.8 2 7.2 5.6"></path></svg></span>
-      <div class="badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"></line><line x1="4" y1="12" x2="20" y2="12"></line></svg></div>
+      <span id="signup-avatar-emoji"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"></circle><path d="M4.8 19.8c1.4-3.6 4.2-5.6 7.2-5.6s5.8 2 7.2 5.6"></path></svg></span>
+      <div class="badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"></line><line x1="4" y1="12" x2="20" y2="12"></line></svg></div>
     </div>
     <input type="file" id="signup-photo-input" accept="image/*" />
 
@@ -613,7 +622,7 @@
   <section id="screen-feed" class="screen">
     <div class="top-row">
       <img class="brand-logo" src="/logo.webp" width="406" height="120" alt="Rounds">
-      <button class="add-friends-btn" onclick="openFindFriends()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-1.6a3.6 3.6 0 0 0-3.6-3.6H6.6A3.6 3.6 0 0 0 3 19.4V21"></path><circle cx="9.8" cy="7.2" r="3.6"></circle><line x1="18.5" y1="7" x2="18.5" y2="12.4"></line><line x1="15.8" y1="9.7" x2="21.2" y2="9.7"></line></svg>Add friends</button>
+      <button class="add-friends-btn" onclick="openFindFriends()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-1.6a3.6 3.6 0 0 0-3.6-3.6H6.6A3.6 3.6 0 0 0 3 19.4V21"></path><circle cx="9.8" cy="7.2" r="3.6"></circle><line x1="18.5" y1="7" x2="18.5" y2="12.4"></line><line x1="15.8" y1="9.7" x2="21.2" y2="9.7"></line></svg>Add friends</button>
     </div>
     <div id="feed-body"></div>
   </section>
@@ -622,10 +631,10 @@
   <section id="screen-you" class="screen">
     <div class="top-row">
       <img class="brand-logo" src="/logo.webp" width="406" height="120" alt="Rounds">
-      <div class="icon-circle" onclick="logout()" title="Log out"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></div>
+      <div class="icon-circle" onclick="logout()" title="Log out"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></div>
     </div>
     <div class="profile-header">
-      <div class="avatar-lg" id="you-avatar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"></circle><path d="M4.8 19.8c1.4-3.6 4.2-5.6 7.2-5.6s5.8 2 7.2 5.6"></path></svg></div>
+      <div class="avatar-lg" id="you-avatar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"></circle><path d="M4.8 19.8c1.4-3.6 4.2-5.6 7.2-5.6s5.8 2 7.2 5.6"></path></svg></div>
       <div>
         <div class="profile-name" id="you-name">You</div>
         <div class="profile-sub" id="you-sub">0 sessions logged</div>
@@ -640,7 +649,7 @@
       <span class="theme-switcher-label">Appearance</span>
       <div class="theme-switcher-control">
         <button id="theme-dark-btn" class="theme-opt" onclick="setTheme('dark')"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 1 0 10.5 10.5z"></path></svg>Dark</button>
-        <button id="theme-light-btn" class="theme-opt" onclick="setTheme('light')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="1.5" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22.5"></line><line x1="1.5" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22.5" y2="12"></line><line x1="4.2" y1="4.2" x2="6" y2="6"></line><line x1="18" y1="18" x2="19.8" y2="19.8"></line><line x1="4.2" y1="19.8" x2="6" y2="18"></line><line x1="18" y1="6" x2="19.8" y2="4.2"></line></svg>Light</button>
+        <button id="theme-light-btn" class="theme-opt" onclick="setTheme('light')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="1.5" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22.5"></line><line x1="1.5" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22.5" y2="12"></line><line x1="4.2" y1="4.2" x2="6" y2="6"></line><line x1="18" y1="18" x2="19.8" y2="19.8"></line><line x1="4.2" y1="19.8" x2="6" y2="18"></line><line x1="18" y1="6" x2="19.8" y2="4.2"></line></svg>Light</button>
       </div>
     </div>
     <div class="divider"></div>
@@ -653,8 +662,8 @@
     <h1>Edit profile</h1>
 
     <div class="avatar-picker" id="edit-avatar-picker" onclick="document.getElementById('edit-photo-input').click()">
-      <span id="edit-avatar-emoji"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"></circle><path d="M4.8 19.8c1.4-3.6 4.2-5.6 7.2-5.6s5.8 2 7.2 5.6"></path></svg></span>
-      <div class="badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"></line><line x1="4" y1="12" x2="20" y2="12"></line></svg></div>
+      <span id="edit-avatar-emoji"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"></circle><path d="M4.8 19.8c1.4-3.6 4.2-5.6 7.2-5.6s5.8 2 7.2 5.6"></path></svg></span>
+      <div class="badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"></line><line x1="4" y1="12" x2="20" y2="12"></line></svg></div>
     </div>
     <input type="file" id="edit-photo-input" accept="image/*" />
 
@@ -692,7 +701,7 @@
     <h1>Find friends</h1>
     <p class="sub">Search by name or username. Their rounds show up in your feed once you follow them.</p>
 
-    <div class="search-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.6" y2="16.6"></line></svg><input id="username-search" placeholder="Search by name or username" oninput="renderUsernameResults()" /></div>
+    <div class="search-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.6" y2="16.6"></line></svg><input id="username-search" placeholder="Search by name or username" oninput="renderUsernameResults()" /></div>
     <div id="username-results"></div>
 
     <div style="margin-top:22px;">
@@ -713,7 +722,7 @@
     <div class="profile-header">
       <div class="avatar-lg" id="view-profile-avatar"></div>
       <div>
-        <div class="profile-name" id="view-profile-name">Loading&hellip;</div>
+        <div class="profile-name" id="view-profile-name"></div>
         <div class="profile-sub" id="view-profile-sub"></div>
       </div>
     </div>
@@ -729,19 +738,19 @@
     <div class="setup-content">
     <h1>What are you<br/>drinking tonight?</h1>
     <div class="mode-card" onclick="selectMode('beer')">
-      <div class="mode-glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h10v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8z"/><path d="M16 10h1.5a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H16"/><path d="M6 8l.7-3.2A1 1 0 0 1 7.7 4h6.6a1 1 0 0 1 1 .8L16 8"/><line x1="8" y1="12" x2="14" y2="12"/></svg></div>
+      <div class="mode-glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h10v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8z"/><path d="M16 10h1.5a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H16"/><path d="M6 8l.7-3.2A1 1 0 0 1 7.7 4h6.6a1 1 0 0 1 1 .8L16 8"/><line x1="8" y1="12" x2="14" y2="12"/></svg></div>
       <div class="mode-text"><div class="t">Beer</div><div class="d">Pints, pitchers, cans</div></div>
-      <svg class="mode-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+      <svg class="mode-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
     </div>
     <div class="mode-card" onclick="selectMode('cocktail')">
-      <div class="mode-glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-8 9-8-9z"/><line x1="12" y1="14" x2="12" y2="20"/><line x1="8" y1="20" x2="16" y2="20"/></svg></div>
+      <div class="mode-glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-8 9-8-9z"/><line x1="12" y1="14" x2="12" y2="20"/><line x1="8" y1="20" x2="16" y2="20"/></svg></div>
       <div class="mode-text"><div class="t">Cocktails</div><div class="d">Mixed drinks, shots, wine</div></div>
-      <svg class="mode-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+      <svg class="mode-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
     </div>
     <div class="mode-card" onclick="selectMode('both')">
-      <div class="mode-glyph"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h7v10.2A1.3 1.3 0 0 1 7.7 18.5H3.3A1.3 1.3 0 0 1 2 17.2V7z"/><line x1="2" y1="9.8" x2="9" y2="9.8"/><path d="M14 5h9l-4.5 5.2v8.3"/><line x1="15.5" y1="18.5" x2="22" y2="18.5"/></svg></div>
+      <div class="mode-glyph"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h7v10.2A1.3 1.3 0 0 1 7.7 18.5H3.3A1.3 1.3 0 0 1 2 17.2V7z"/><line x1="2" y1="9.8" x2="9" y2="9.8"/><path d="M14 5h9l-4.5 5.2v8.3"/><line x1="15.5" y1="18.5" x2="22" y2="18.5"/></svg></div>
       <div class="mode-text"><div class="t">Both</div><div class="d">Beer and cocktails, one night</div></div>
-      <svg class="mode-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
+      <svg class="mode-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
     </div>
     </div>
   </section>
@@ -762,7 +771,7 @@
     <div class="viewfinder" id="viewfinder">
       <video id="video" autoplay playsinline muted></video>
       <div class="vf-fallback" id="vf-fallback" style="display:none;">
-        <span class="icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"></path><circle cx="12" cy="13" r="3.4"></circle></svg></span>
+        <span class="icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"></path><circle cx="12" cy="13" r="3.4"></circle></svg></span>
         No camera preview here. Logging a drink opens your camera instead.
       </div>
       <div class="rec-chip"><span class="rec-dot"></span>REC</div>
@@ -784,7 +793,7 @@
     <div class="two-col">
       <div class="graph-card"><svg id="save-chart-svg" viewBox="0 0 130 112"></svg><div class="graph-caption">Drinks over time</div></div>
       <div class="photo-tile" id="save-photo-tile" onclick="document.getElementById('save-photo-input').click()">
-        <span class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"></rect><circle cx="8.5" cy="10" r="1.6"></circle><path d="M21 16.5l-5.6-5.6a1.5 1.5 0 0 0-2.1 0L4 20"></path></svg></span><span>Add photos</span>
+        <span class="icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"></rect><circle cx="8.5" cy="10" r="1.6"></circle><path d="M21 16.5l-5.6-5.6a1.5 1.5 0 0 0-2.1 0L4 20"></path></svg></span><span>Add photos</span>
       </div>
     </div>
     <input type="file" id="save-photo-input" accept="image/*" multiple />
@@ -792,20 +801,20 @@
     <button class="btn btn-ghost discard-round-btn" onclick="discardRound()">Discard round</button>
   </section>
 
-  <div class="bottom-nav" id="bottom-nav">
+  <nav class="bottom-nav" id="bottom-nav" aria-label="Main">
     <div class="bottom-nav-inner">
-      <button class="nav-item" id="nav-feed" onclick="goToFeed()"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="14" width="16" height="6" rx="2"/></svg></span>Feed</button>
-      <div class="nav-record" onclick="beginNewEvent()" aria-label="Log a round"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
-      <button class="nav-item" id="nav-you" onclick="goToYou()"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"></circle><path d="M4.8 19.8c1.4-3.6 4.2-5.6 7.2-5.6s5.8 2 7.2 5.6"></path></svg></span>You</button>
+      <button class="nav-item" id="nav-feed" onclick="goToFeed()"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="7" rx="2"/><rect x="4" y="14" width="16" height="6" rx="2"/></svg></span>Feed</button>
+      <button class="nav-record" onclick="beginNewEvent()" aria-label="Log a round"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+      <button class="nav-item" id="nav-you" onclick="goToYou()"><span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"></circle><path d="M4.8 19.8c1.4-3.6 4.2-5.6 7.2-5.6s5.8 2 7.2 5.6"></path></svg></span>You</button>
     </div>
-  </div>
+  </nav>
 
-</div>
+</main>
 
 <!-- SHARE MODAL -->
 <div class="share-modal" id="share-modal">
   <div class="share-modal-header">
-    <button class="share-close" onclick="closeShareModal()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
+    <button class="share-close" onclick="closeShareModal()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><line x1="5" y1="5" x2="19" y2="19"></line><line x1="19" y1="5" x2="5" y2="19"></line></svg></button>
     <div class="share-modal-title">Share</div>
     <div class="share-modal-spacer"></div>
   </div>
@@ -834,9 +843,9 @@
       <div class="crop-mask"></div>
     </div>
     <div class="crop-zoom-row">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
       <input type="range" id="crop-zoom-slider" min="1" max="3" step="0.01" value="1" oninput="onCropZoomChange(parseFloat(this.value))" />
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
     </div>
     <div class="crop-actions">
       <button class="btn btn-ghost" onclick="closeCropModal()">Cancel</button>
@@ -1019,14 +1028,19 @@ function resetRoundState(){
 
 const EMOJI = { beer: '🍺', cocktail: '🍸' };
 const LOGO_SRC = '/logo.webp';
-const ICON_GLASS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h10v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8z"/><path d="M16 10h1.5a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H16"/><path d="M6 8l.7-3.2A1 1 0 0 1 7.7 4h6.6a1 1 0 0 1 1 .8L16 8"/></svg>';
-const ICON_USERS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.5"/><path d="M20 20v-1.5a3.5 3.5 0 0 0-2.5-3.35"/><path d="M15.5 4.6a3.5 3.5 0 0 1 0 6.8"/></svg>';
-const ICON_PERSON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"></circle><path d="M4.8 19.8c1.4-3.6 4.2-5.6 7.2-5.6s5.8 2 7.2 5.6"></path></svg>';
-const ICON_IMAGE = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"></rect><circle cx="8.5" cy="10" r="1.6"></circle><path d="M21 16.5l-5.6-5.6a1.5 1.5 0 0 0-2.1 0L4 20"></path></svg>';
-const ICON_PLUS = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"></line><line x1="4" y1="12" x2="20" y2="12"></line></svg>';
-const ICON_COMMENT = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 3.5v-3.5H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"></path></svg>';
-const ICON_SHARE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7.5 7.5L12 3l4.5 4.5"></path><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path></svg>';
-const ICON_TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+// Placeholder cards shown on a first load, so the feed never sits blank while
+// the network answers. Only used when the list is empty: a re-render over
+// existing cards keeps them on screen instead of flashing placeholders.
+const SKELETON_CARD = '<div class="post-card skeleton" aria-hidden="true"><div class="post-author"><div class="post-avatar sk"></div><div><div class="sk sk-line" style="width:110px"></div><div class="sk sk-line" style="width:56px;margin-top:6px"></div></div></div><div class="sk sk-line" style="width:62%;height:16px"></div><div class="sk sk-block"></div></div>';
+function showSkeletonIfEmpty(body){ if(!body.children.length) body.innerHTML = SKELETON_CARD + SKELETON_CARD; }
+const ICON_GLASS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h10v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8z"/><path d="M16 10h1.5a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H16"/><path d="M6 8l.7-3.2A1 1 0 0 1 7.7 4h6.6a1 1 0 0 1 1 .8L16 8"/></svg>';
+const ICON_USERS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.5"/><path d="M20 20v-1.5a3.5 3.5 0 0 0-2.5-3.35"/><path d="M15.5 4.6a3.5 3.5 0 0 1 0 6.8"/></svg>';
+const ICON_PERSON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.5" r="3.6"></circle><path d="M4.8 19.8c1.4-3.6 4.2-5.6 7.2-5.6s5.8 2 7.2 5.6"></path></svg>';
+const ICON_IMAGE = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2.5"></rect><circle cx="8.5" cy="10" r="1.6"></circle><path d="M21 16.5l-5.6-5.6a1.5 1.5 0 0 0-2.1 0L4 20"></path></svg>';
+const ICON_PLUS = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><line x1="12" y1="4" x2="12" y2="20"></line><line x1="4" y1="12" x2="20" y2="12"></line></svg>';
+const ICON_COMMENT = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5h16a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H9l-4 3.5v-3.5H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z"></path></svg>';
+const ICON_SHARE = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"></path><path d="M7.5 7.5L12 3l4.5 4.5"></path><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path></svg>';
+const ICON_TRASH = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
 
 // ---------------------------------------------------------------
 // TOAST + CONFIRM SHEET — in-app replacements for alert()/confirm().
@@ -2390,7 +2404,7 @@ function renderPostCard(event, authorName, opts){
         <button class="post-action-btn" onclick="openShare('${event.id}')">${ICON_SHARE} Share</button>
       </div>
       <div class="comment-box" id="${uid}-comments" style="display:none;">
-        <div id="${uid}-comment-list">Loading…</div>
+        <div id="${uid}-comment-list"><div class="sk sk-line" style="width:70%;margin:8px 2px"></div></div>
         <div class="comment-input-row">
           <input id="${uid}-comment-input" placeholder="Add a comment" />
           <button class="comment-send" onclick="submitComment('${event.id}', '${uid}')">Send</button>
@@ -2563,6 +2577,7 @@ function appendCommentRow(uid, authorName, text){
 async function renderFeed(){
   const body = document.getElementById('feed-body');
   if(!currentUser){ body.innerHTML = ''; return; }
+  showSkeletonIfEmpty(body);
   const { data: followRows } = await sb.from('follows').select('following_id').eq('follower_id', currentUser.id);
   const followingIds = (followRows || []).map(r => r.following_id);
 
@@ -2623,6 +2638,7 @@ async function renderYou(){
   refreshOwnAvatarUI();
   const body = document.getElementById('you-body');
   if(!currentUser){ body.innerHTML = ''; return; }
+  showSkeletonIfEmpty(body);
 
   const [{ count: followerCount }, { count: followingCount }, { data: rows, error }] = await Promise.all([
     sb.from('follows').select('follower_id', { count: 'exact', head: true }).eq('following_id', currentUser.id),
@@ -2783,11 +2799,11 @@ async function openUserProfile(userId){
   if(!currentUser) return;
   if(userId === currentUser.id){ goToYou(); return; }
   viewProfileReturnScreen = document.querySelector('.screen.active')?.id || 'screen-feed';
-  document.getElementById('view-profile-name').textContent = 'Loading…';
+  document.getElementById('view-profile-name').textContent = '';
   document.getElementById('view-profile-sub').textContent = '';
   document.getElementById('view-profile-follow-row').innerHTML = '';
   document.getElementById('view-profile-actions').innerHTML = '';
-  document.getElementById('view-profile-body').innerHTML = '';
+  document.getElementById('view-profile-body').innerHTML = SKELETON_CARD;
   const avatarEl = document.getElementById('view-profile-avatar');
   avatarEl.style.backgroundImage = '';
   avatarEl.innerHTML = ICON_PERSON;
@@ -2936,6 +2952,25 @@ async function downloadShareImage(){
 // INIT — hydrate currentUser from the real Supabase session (Google
 // OAuth lands back here with one already set), then route screens.
 // ---------------------------------------------------------------
+// Many controls here are divs/spans/links with onclick, which a keyboard
+// can't reach. Give them button semantics and let Enter/Space press them,
+// including ones rendered later (feed cards, search results).
+function makeTappablesFocusable(root){
+  const sel = '[onclick]:not(button):not(input):not(textarea):not(a[href])';
+  const els = root.matches && root.matches(sel) ? [root] : [];
+  els.concat([...root.querySelectorAll(sel)]).forEach(el => {
+    if(!el.hasAttribute('tabindex')) el.tabIndex = 0;
+    if(!el.hasAttribute('role')) el.setAttribute('role', 'button');
+  });
+}
+makeTappablesFocusable(document.body);
+new MutationObserver(muts => muts.forEach(m => m.addedNodes.forEach(n => { if(n.nodeType === 1) makeTappablesFocusable(n); })))
+  .observe(document.body, { childList: true, subtree: true });
+document.addEventListener('keydown', e => {
+  if((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[role="button"][onclick]')){
+    e.preventDefault(); e.target.click();
+  }
+});
 initTheme();
 
 // Returns a profile, 'missing' (the server answered: no such row), or
