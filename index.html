@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
-<meta name="theme-color" id="meta-theme-color" content="#0B0B0C" />
+<meta name="theme-color" id="meta-theme-color" content="#FAFAFA" />
 <meta name="color-scheme" content="light dark" />
 <title>Rounds: Strava for Drinking &amp; Beer, Log Your Nights Out</title>
 <meta name="description" content="Rounds is the Strava for drinking. Log every beer and cocktail on a night out, graph your night and see your friends' rounds. Free, in your browser." />
@@ -255,39 +255,8 @@
   .field-hint.ok{ color:var(--success); }
   .field-hint.bad{ color:var(--danger); }
 
-  /* ---- mode select ---- */
-  #screen-setup.active{ display:flex; flex-direction:column; }
-  .setup-content{ flex:1; display:flex; flex-direction:column; padding-top:4px; }
-  .setup-content h1{ margin-bottom:24px; }
-  .mode-card{
-    display:flex; align-items:center; gap:14px; background:var(--card); border:1px solid var(--line); border-radius:18px;
-    padding:14px 14px 14px 14px; margin-bottom:10px; cursor:pointer; box-shadow:var(--card-shadow);
-    transition:transform var(--press), background-color 150ms ease;
-  }
-  .mode-card:active{ transform:scale(.98); background:var(--surface2); }
-  .mode-glyph{ width:46px; height:46px; border-radius:13px; display:flex; align-items:center; justify-content:center; flex:none; background:var(--primary-tint); color:var(--primary-light); }
-  .mode-text{ flex:1; min-width:0; }
-  .mode-text .t{ font-weight:600; font-size:16px; letter-spacing:-0.015em; color:var(--ink); }
-  .mode-text .d{ color:var(--muted); font-size:13.5px; margin-top:2px; line-height:1.4; }
-  .mode-chevron{ flex:none; color:var(--faint); }
-
-  /* ---- ready ---- */
-  #screen-ready.active{ display:flex; flex-direction:column; }
-  .ready-badge{ align-self:flex-start; display:inline-flex; align-items:center; gap:8px; background:var(--field); padding:7px 12px 7px 11px; border-radius:100px; font-size:13.5px; color:var(--ink2); font-weight:500; margin:4px 0 16px; }
+  /* ---- dots ---- */
   .dot{ width:7px; height:7px; border-radius:50%; background:var(--primary); }
-  .start-ring-wrap{ flex:1; display:flex; align-items:center; justify-content:center; margin:24px 0 48px; }
-  .start-ring{
-    width:188px; height:188px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    background:var(--primary-dim); position:relative; cursor:pointer; isolation:isolate;
-    transition:transform 200ms var(--ease-out);
-  }
-  /* One slow ring breathing outward: this screen is seen once per night, so
-     a little life is earned here in a way it wouldn't be on the feed. */
-  .start-ring::before, .start-ring::after{ content:''; position:absolute; inset:0; border-radius:50%; border:1.5px solid var(--primary); z-index:-1; animation:breathe 2600ms var(--ease-out) infinite; }
-  .start-ring::after{ animation-delay:1300ms; }
-  @keyframes breathe{ from{ transform:scale(1); opacity:.55; } to{ transform:scale(1.28); opacity:0; } }
-  .start-ring:active{ transform:scale(.96); }
-  .start-ring span{ font-weight:600; font-size:20px; letter-spacing:-0.02em; color:#fff; }
 
   /* ---- activity ---- */
   .timer{ font-family:var(--font-mono); font-weight:500; font-size:56px; font-variant-numeric:tabular-nums; text-align:center; margin:10px 0 2px; color:var(--ink); letter-spacing:-0.06em; line-height:1.1; }
@@ -303,8 +272,9 @@
   .flash{ position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; }
   .flash.go{ animation:flashpop 300ms var(--ease-out); }
   @keyframes flashpop{ 0%{opacity:.8;} 100%{opacity:0;} }
-  .log-buttons{ display:flex; gap:10px; margin-top:14px; }
-  .log-buttons .btn{ margin-top:0; height:56px; font-size:16px; }
+  .log-buttons{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+  .log-buttons .btn{ margin-top:0; height:54px; padding:0 10px; font-size:15px; }
+  .log-buttons .btn + .btn{ margin-top:0; }
   .log-strip{ display:flex; gap:10px; overflow-x:auto; padding:16px 2px 4px; margin-bottom:4px; scrollbar-width:none; }
   .log-strip::-webkit-scrollbar{ display:none; }
   .log-strip:empty{ display:none; }
@@ -371,6 +341,7 @@
   .post-author-name{ font-weight:600; font-size:14.5px; letter-spacing:-0.01em; color:var(--ink); }
   .post-meta{ color:var(--muted); font-size:12.5px; margin-top:1px; }
   .post-title{ font-weight:600; font-size:19px; line-height:1.25; letter-spacing:-0.025em; margin:0 0 4px; color:var(--ink); text-wrap:balance; }
+  .post-extra{ font-size:13px; color:var(--muted); margin:-6px 0 14px; }
   .post-desc{ color:var(--muted); font-size:14px; line-height:1.5; margin-bottom:2px; text-wrap:pretty; }
   .post-stats{ display:flex; gap:0; margin:14px 0 14px; }
   .post-stats > div{ flex:1; padding-left:12px; border-left:1px solid var(--line); }
@@ -403,6 +374,18 @@
   .post-action-btn span:last-child:not(.cheers-emoji){ font-variant-numeric:tabular-nums; color:var(--faint); }
   .post-action-btn.liked, .post-action-btn.liked span:last-child{ color:var(--primary-light); }
   .post-action-btn:active{ transform:scale(.96); background:var(--surface2); }
+  .cheers-summary{ display:flex; align-items:center; gap:8px; width:100%; min-height:30px; margin:0 0 6px; padding:0; background:none; border:none; text-align:left; font-size:13.5px; color:var(--muted); cursor:pointer; transition:opacity 120ms ease; }
+  .cheers-summary[hidden]{ display:none; }
+  .cheers-summary b{ color:var(--ink); font-weight:600; }
+  .cheers-summary:active{ opacity:.6; }
+  .mini-avatars{ display:flex; flex:none; }
+  .mini-avatar{ width:22px; height:22px; border-radius:50%; margin-left:-6px; background:var(--surface3) center/cover; box-shadow:0 0 0 2px var(--card); display:flex; align-items:center; justify-content:center; font-size:10.5px; font-weight:600; color:var(--ink2); }
+  .mini-avatar:first-child{ margin-left:0; }
+  .list-sheet{ max-height:70dvh; display:flex; flex-direction:column; }
+  .list-sheet-body{ overflow-y:auto; overscroll-behavior:contain; margin:4px -4px 0; padding:0 4px; }
+  .list-sheet .user-row{ cursor:pointer; }
+  .list-sheet .user-avatar{ background-size:cover; background-position:center; }
+  .row-cheers{ font-size:16px; }
   .comment-box{ margin:6px 0 10px; }
 
   /* ---- share modal (kept dark in both themes: it previews a transparent
@@ -519,7 +502,6 @@
   @media (hover:hover) and (pointer:fine){
     .btn-primary:hover, .btn-request:hover, .comment-send:hover, .nav-record:hover{ background:#C3360C; }
     .btn-ghost:hover, .btn-create:hover, .add-friends-btn:hover, .icon-circle:hover, .profile-actions button:hover, .btn-following:hover{ background:var(--surface3); }
-    .mode-card:hover{ background:var(--surface2); }
     .post-action-btn:hover{ background:var(--surface2); color:var(--ink2); }
     .back-link:hover{ color:var(--ink); }
     .nav-item:hover{ color:var(--ink2); }
@@ -528,7 +510,7 @@
     .btn-google:hover{ opacity:.92; }
   }
 
-  @media (max-width:360px){ .timer{font-size:46px;} .start-ring{width:160px;height:160px;} .auth-hero h1{font-size:34px;} }
+  @media (max-width:360px){ .timer{font-size:46px;} .auth-hero h1{font-size:34px;} }
   @media (max-height:720px){ .auth-hero{ padding-top:20px; } .auth-hero .brand-logo{ margin-bottom:26px; } .auth-graph{ margin-bottom:24px; } }
 
   /* Reduced motion means gentler, not none: keep fades (they aid
@@ -538,7 +520,6 @@
     @keyframes cardin{ from{opacity:0;} to{opacity:1;} }
     @keyframes modalfade{ from{opacity:0;} to{opacity:1;} }
     @keyframes cheerspop{ from{opacity:.6;} to{opacity:1;} }
-    .start-ring::before, .start-ring::after{ animation:none; opacity:0; }
     .sk, .post-card.skeleton .post-avatar, .profile-name:empty::before{ animation:none; }
     .auth-graph .step{ animation:none; stroke-dashoffset:0; }
     .auth-graph .pin{ animation:none; opacity:1; }
@@ -549,6 +530,7 @@
 </style>
 </head>
 <body>
+<script>/* set the theme before first paint so a dark-mode user never sees a light flash, or vice versa */try{document.body.setAttribute('data-rounds-theme',localStorage.getItem('rounds-theme')==='dark'?'dark':'light')}catch(e){document.body.setAttribute('data-rounds-theme','light')}</script>
 <main class="phone">
 
   <!-- AUTH (Google or create account) -->
@@ -732,40 +714,9 @@
     <div id="view-profile-body"></div>
   </section>
 
-  <!-- SETUP -->
-  <section id="screen-setup" class="screen no-nav">
-    <a class="back-link" onclick="cancelNewEvent()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>Cancel</a>
-    <div class="setup-content">
-    <h1>What are you<br/>drinking tonight?</h1>
-    <div class="mode-card" onclick="selectMode('beer')">
-      <div class="mode-glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h10v11a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8z"/><path d="M16 10h1.5a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H16"/><path d="M6 8l.7-3.2A1 1 0 0 1 7.7 4h6.6a1 1 0 0 1 1 .8L16 8"/><line x1="8" y1="12" x2="14" y2="12"/></svg></div>
-      <div class="mode-text"><div class="t">Beer</div><div class="d">Pints, pitchers, cans</div></div>
-      <svg class="mode-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-    </div>
-    <div class="mode-card" onclick="selectMode('cocktail')">
-      <div class="mode-glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16l-8 9-8-9z"/><line x1="12" y1="14" x2="12" y2="20"/><line x1="8" y1="20" x2="16" y2="20"/></svg></div>
-      <div class="mode-text"><div class="t">Cocktails</div><div class="d">Mixed drinks, shots, wine</div></div>
-      <svg class="mode-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-    </div>
-    <div class="mode-card" onclick="selectMode('both')">
-      <div class="mode-glyph"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h7v10.2A1.3 1.3 0 0 1 7.7 18.5H3.3A1.3 1.3 0 0 1 2 17.2V7z"/><line x1="2" y1="9.8" x2="9" y2="9.8"/><path d="M14 5h9l-4.5 5.2v8.3"/><line x1="15.5" y1="18.5" x2="22" y2="18.5"/></svg></div>
-      <div class="mode-text"><div class="t">Both</div><div class="d">Beer and cocktails, one night</div></div>
-      <svg class="mode-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"/></svg>
-    </div>
-    </div>
-  </section>
-
-  <!-- READY -->
-  <section id="screen-ready" class="screen no-nav">
-    <a class="back-link" onclick="showScreen('screen-setup')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>Back</a>
-    <div class="ready-badge" id="ready-badge"></div>
-    <h1>Start the clock</h1>
-    <p class="sub">Log each drink as it arrives. Your graph builds itself.</p>
-    <div class="start-ring-wrap"><div class="start-ring" onclick="startSession()"><span>Start</span></div></div>
-  </section>
-
   <!-- ACTIVITY -->
   <section id="screen-activity" class="screen no-nav">
+    <a class="back-link" id="cancel-round-btn" onclick="cancelEmptyRound()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>Cancel</a>
     <div class="timer" id="timer-display">00:00:00</div>
     <div class="timer-label" id="activity-mode-label">Session in progress</div>
     <div class="viewfinder" id="viewfinder">
@@ -851,6 +802,14 @@
       <button class="btn btn-ghost" onclick="closeCropModal()">Cancel</button>
       <button class="btn btn-primary" onclick="confirmCrop()">Use photo</button>
     </div>
+  </div>
+</div>
+
+<!-- LIST SHEET — who cheered a post -->
+<div class="confirm-sheet-backdrop" id="list-sheet-backdrop">
+  <div class="confirm-sheet list-sheet" role="dialog" aria-modal="true" aria-labelledby="list-sheet-title">
+    <div class="confirm-sheet-title" id="list-sheet-title"></div>
+    <div class="list-sheet-body" id="list-sheet-body"></div>
   </div>
 </div>
 
@@ -1026,7 +985,10 @@ function resetRoundState(){
   state.sessionDraftId = null; state.pendingEntry = null;
 }
 
-const EMOJI = { beer: '🍺', cocktail: '🍸' };
+const EMOJI = { beer: '🍺', cocktail: '🍸', shot: '🥃', cigarette: '🚬' };
+// Cigarettes are logged and shown, but they aren't drinks: they don't count
+// as rounds, don't step the graph up and don't change the pace.
+const isDrink = e => e.type !== 'cigarette';
 const LOGO_SRC = '/logo.webp';
 // Placeholder cards shown on a first load, so the feed never sits blank while
 // the network answers. Only used when the list is empty: a re-render over
@@ -1086,8 +1048,8 @@ function showConfirm(title, body, confirmLabel){
 }
 
 // ---------------------------------------------------------------
-// THEME — dark by default (the look everyone preferred); light is
-// an opt-in switch in the You tab. Persisted per-device only.
+// THEME — light by default; dark is a switch in the You tab.
+// Persisted per-device only.
 // ---------------------------------------------------------------
 function setTheme(theme){
   document.body.setAttribute('data-rounds-theme', theme);
@@ -1104,16 +1066,11 @@ function setTheme(theme){
   if(metaTheme) metaTheme.setAttribute('content', theme === 'light' ? '#FAFAFA' : '#0B0B0C');
 }
 function initTheme(){
-  let saved = 'dark';
+  let saved = 'light';
   try{ const t = localStorage.getItem('rounds-theme'); if(t === 'light' || t === 'dark') saved = t; }catch(e){}
   setTheme(saved);
 }
 
-const MODE_COPY = {
-  beer:     { label: 'Beer session',      badge: '🍺 Beer session' },
-  cocktail: { label: 'Cocktail session',  badge: '🍸 Cocktail session' },
-  both:     { label: 'Mixed session',     badge: '🍻 Beer + cocktails' },
-};
 
 function findEvent(eventId){ return eventCache.get(String(eventId)); }
 
@@ -1812,19 +1769,20 @@ async function beginNewEvent(){
   if(await resumeActiveSessionIfAny(1500)){ showToast('You have a round in progress'); return; }
   resetRoundState();
   compose.title = ''; compose.description = ''; compose.extraPhotos = [];
-  showScreen('screen-setup');
+  // Every round logs all four kinds, so there's nothing to choose up front.
+  // 'both' is the stored mode the database already accepts.
+  state.mode = 'both';
+  startSession();
 }
-function cancelNewEvent(){
-  // Only reachable before a round has started (mode picker), so there's nothing saved to clear.
-  if(roundInProgress()){ showRoundScreen(); return; }
+// A tap on + by mistake shouldn't leave a round to end and discard: until the
+// first thing is logged, Cancel throws the empty round away without asking.
+async function cancelEmptyRound(){
+  if(!roundInProgress() || state.entries.length) return;
+  const draftId = state.sessionDraftId;
+  stopCamera(); clearInterval(state.timerInterval);
   resetRoundState();
+  await clearRoundEverywhere(draftId);
   goToFeed();
-}
-function selectMode(mode){
-  state.mode = mode;
-  const copy = MODE_COPY[mode];
-  document.getElementById('ready-badge').innerHTML = `<span class="dot"></span> ${copy.badge}`;
-  showScreen('screen-ready');
 }
 
 // ---------------------------------------------------------------
@@ -1903,16 +1861,21 @@ function fireFlash(){ const f=document.getElementById('flash'); f.classList.remo
 // ---------------------------------------------------------------
 // SESSION (logging)
 // ---------------------------------------------------------------
+const LOG_BUTTONS = [
+  { type: 'beer', label: 'Log a beer' },
+  { type: 'cocktail', label: 'Log a cocktail' },
+  { type: 'shot', label: 'Log a shot' },
+  { type: 'cigarette', label: 'Log a cigarette' },
+];
 function buildLogButtons(){
   const wrap = document.getElementById('log-buttons'); wrap.innerHTML = '';
-  if(state.mode === 'beer' || state.mode === 'both'){
-    const b = document.createElement('button'); b.className='btn btn-primary'; b.textContent='🍺 Log beer';
-    b.onclick = () => logDrink('beer'); wrap.appendChild(b);
-  }
-  if(state.mode === 'cocktail' || state.mode === 'both'){
-    const b = document.createElement('button'); b.className='btn btn-primary'; b.textContent='🍸 Log cocktail';
-    b.onclick = () => logDrink('cocktail'); wrap.appendChild(b);
-  }
+  LOG_BUTTONS.forEach(({ type, label }) => {
+    const b = document.createElement('button');
+    b.className = 'btn ' + (type === 'cigarette' ? 'btn-ghost' : 'btn-primary');
+    b.innerHTML = `<span aria-hidden="true">${EMOJI[type]}</span> ${label}`;
+    b.onclick = () => logDrink(type);
+    wrap.appendChild(b);
+  });
 }
 async function startSession(){
   if(roundInProgress()){ showRoundScreen(); return; } // never start over an unfinished round
@@ -1929,7 +1892,7 @@ async function startSession(){
 // the save screen if "End session" was already tapped.
 function showRoundScreen(){
   if(state.endTime){ stopCamera(); clearInterval(state.timerInterval); renderSaveScreen(); showScreen('screen-save'); return; }
-  document.getElementById('activity-mode-label').textContent = MODE_COPY[state.mode].label + ' in progress';
+  document.getElementById('activity-mode-label').textContent = 'Round in progress';
   buildLogButtons();
   renderLogStrip();
   showScreen('screen-activity');
@@ -1949,6 +1912,7 @@ function startTimer(){
 // attach one; cancelling that still leaves the drink logged.
 function logDrink(type){
   if(!roundInProgress() || state.endTime) return;
+  if(type === 'cigarette'){ addEntry(type, null); return; }
   fireFlash();
   let photo = null;
   if(cameraLooksHealthy()){ try{ photo = captureFromVideo(); }catch(e){ photo = null; } }
@@ -2028,6 +1992,7 @@ async function retryPendingUploads(){
   } finally { retryingUploads = false; }
 }
 function renderLogStrip(){
+  document.getElementById('cancel-round-btn').style.display = state.entries.length ? 'none' : '';
   const strip = document.getElementById('log-strip'); strip.innerHTML = '';
   state.entries.slice().reverse().forEach(entry => {
     const item = document.createElement('div'); item.className = 'strip-item';
@@ -2094,7 +2059,7 @@ function escapeHtml(str){
 function computeStats(entries, startTime, endTime){
   const beers = entries.filter(e=>e.type==='beer').length;
   const cocktails = entries.filter(e=>e.type==='cocktail').length;
-  const total = entries.length;
+  const total = entries.filter(isDrink).length;
   const duration = Math.max(1000, (endTime||Date.now())-startTime);
   const pace = total>1 ? formatDurationShort(duration/total)+'/round' : '—';
   return { beers, cocktails, total, duration, pace };
@@ -2108,7 +2073,7 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   opts = opts || {};
   const padL = opts.padL ?? 26, padR = opts.padR ?? 10, padT = opts.padT ?? 12, padB = opts.padB ?? 22;
   const innerW = w-padL-padR, innerH = h-padT-padB;
-  const maxCount = Math.max(1, entries.length);
+  const maxCount = Math.max(1, entries.filter(isDrink).length);
   const dur = Math.max(1000, endTime-startTime);
   const xScale = t => padL + ((t-startTime)/dur)*innerW;
   const yScale = c => padT + innerH - (c/maxCount)*innerH;
@@ -2137,10 +2102,12 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   let count = 0, markers = '';
   sorted.forEach(e => {
     const x = xScale(e.time);
-    d += ` L${x.toFixed(1)},${yScale(count).toFixed(1)}`;
-    count++;
-    d += ` L${x.toFixed(1)},${yScale(count).toFixed(1)}`;
-    markers += `<g><circle cx="${x.toFixed(1)}" cy="${yScale(count).toFixed(1)}" r="${opts.pinR||9}" fill="#fff" stroke="#FC4C02" stroke-width="2"/><text x="${x.toFixed(1)}" y="${(yScale(count)+1).toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="${(opts.pinR||9)*1.1}">${EMOJI[e.type]}</text></g>`;
+    if(isDrink(e)){
+      d += ` L${x.toFixed(1)},${yScale(count).toFixed(1)}`;
+      count++;
+      d += ` L${x.toFixed(1)},${yScale(count).toFixed(1)}`;
+    }
+    markers += `<g><circle cx="${x.toFixed(1)}" cy="${yScale(count).toFixed(1)}" r="${opts.pinR||9}" fill="#fff" stroke="${isDrink(e) ? '#FC4C02' : '#9A9AA2'}" stroke-width="2"/><text x="${x.toFixed(1)}" y="${(yScale(count)+1).toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="${(opts.pinR||9)*1.1}">${EMOJI[e.type] || ''}</text></g>`;
   });
   d += ` L${xScale(endTime).toFixed(1)},${yScale(count).toFixed(1)}`;
 
@@ -2175,7 +2142,7 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   // Drop a tick whose label repeats the previous one (the end-of-session tick
   // landing in the same hour as the last hourly tick printed "21 21") or
   // that would sit close enough to overlap it.
-  const minTickGap = innerW * 0.14;
+  const minTickGap = innerW * 0.17;
   const keptTicks = [];
   tickTimes.forEach(t => {
     const prev = keptTicks[keptTicks.length - 1];
@@ -2200,7 +2167,7 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   for(let c = 0; c <= maxCount; c++){
     const y = yScale(c);
     yLabels += `<line${gridClass} x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="${gridColor}" stroke-width="${gridStrokeWidth}"/>`;
-    yLabels += `<text${textClass} x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="${textColor}">${c}</text>`;
+    yLabels += `<text${textClass} x="${padL - ((opts.pinR||9) + 4)}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="${textColor}">${c}</text>`;
   }
 
   return `${yLabels}${yAxisLine}${ticks}${axisLine}<path d="${d}" fill="none" stroke="#FC4C02" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>${markers}`;
@@ -2327,6 +2294,7 @@ function normalizeEventRow(row, viewerCheeredSet){
     extraPhotos: row.extra_photos || [],
     beers: row.beers, cocktails: row.cocktails, total: row.total, duration: row.duration_ms,
     pace: row.total > 1 ? formatDurationShort(row.duration_ms / row.total) + '/round' : '—',
+    cigarettes: (row.entries || []).filter(e => e.type === 'cigarette').length,
     postedAt: new Date(row.posted_at).getTime(),
     cheersCount: row.cheers_count,
     commentsCount: row.comments_count,
@@ -2394,11 +2362,13 @@ function renderPostCard(event, authorName, opts){
         <div><div class="l">Pace</div><div class="v">${event.pace}</div></div>
         <div><div class="l">Time</div><div class="v">${formatDurationShort(event.duration)}</div></div>
       </div>
+      ${event.cigarettes ? `<div class="post-extra">🚬 ${event.cigarettes} cigarette${event.cigarettes === 1 ? '' : 's'}</div>` : ''}
       <div class="post-carousel"><div class="carousel-track" id="${uid}-track">${slides}</div></div>
       <div class="carousel-dots" id="${uid}-dots">${dots}</div>
+      <button class="cheers-summary" id="${uid}-cheerers" onclick="openCheersSheet('${event.id}')"${event.cheersCount > 0 ? '' : ' hidden'}>${cheersSummaryHtml(event)}</button>
       <div class="post-actions">
         <button class="post-action-btn ${event.cheered?'liked':''}" id="${uid}-cheers" onclick="toggleCheers('${event.id}', '${uid}')">
-          <span class="cheers-emoji">🥂</span> Cheers <span>(${event.cheersCount})</span>
+          <span class="cheers-emoji">🥂</span> Cheers
         </button>
         <button class="post-action-btn" id="${uid}-commentbtn" onclick="toggleComments('${event.id}', '${uid}')">${ICON_COMMENT} Comment <span>(${event.commentsCount})</span></button>
         <button class="post-action-btn" onclick="openShare('${event.id}')">${ICON_SHARE} Share</button>
@@ -2420,7 +2390,7 @@ function mountPostCard(container, event, authorName, opts){
   const { html, uid } = renderPostCard(event, authorName, opts);
   container.insertAdjacentHTML('beforeend', html);
   document.getElementById(`${uid}-chart`).innerHTML =
-    buildCountChart(event.entries, event.startTime, event.endTime, 300, 244, { pinR:10, padB:36 });
+    buildCountChart(event.entries, event.startTime, event.endTime, 300, 244, { pinR:10, padB:40, padL:30 });
 
   const track = document.getElementById(`${uid}-track`);
   const dots = document.querySelectorAll(`#${uid}-dots .dot`);
@@ -2492,6 +2462,78 @@ async function deletePost(eventId){
   await renderYou();
 }
 
+// ---------------------------------------------------------------
+// WHO CHEERED — one query per feed load fetches everyone who cheered the
+// posts on screen, so each card can say "Cheers from Aman and 2 others"
+// and open the full list without another round trip.
+// ---------------------------------------------------------------
+async function attachCheerers(events){
+  events.forEach(ev => { ev.cheerers = []; });
+  const ids = events.filter(ev => ev.cheersCount > 0).map(ev => ev.id);
+  if(!ids.length) return;
+  const { data, error } = await sb.from('cheers')
+    .select('event_id, created_at, profiles(id, display_name, username, photo_url)')
+    .in('event_id', ids)
+    .order('created_at', { ascending: false });
+  if(error || !data) return;
+  const byId = new Map(events.map(ev => [String(ev.id), ev]));
+  data.forEach(r => {
+    const ev = byId.get(String(r.event_id));
+    if(!ev || !r.profiles) return;
+    ev.cheerers.push(r.profiles);
+    if(currentUser && r.profiles.id === currentUser.id) ev.cheered = true;
+  });
+}
+function setOwnCheer(ev, on){
+  if(!currentUser) return;
+  ev.cheerers = (ev.cheerers || []).filter(p => p.id !== currentUser.id);
+  if(on) ev.cheerers.unshift({ id: currentUser.id, display_name: currentUser.name, username: currentUser.username, photo_url: currentUser.photo });
+}
+function cheererAvatarHtml(p){
+  return p.photo_url
+    ? `<span class="mini-avatar" style="background-image:url(${p.photo_url})"></span>`
+    : `<span class="mini-avatar">${escapeHtml((p.display_name || '?').trim().charAt(0).toUpperCase())}</span>`;
+}
+function cheersSummaryHtml(ev){
+  const list = ev.cheerers || [];
+  const n = ev.cheersCount || 0;
+  if(!list.length) return `🥂 <span><b>${n}</b> cheers</span>`;
+  const isMe = p => currentUser && p.id === currentUser.id;
+  const name = p => isMe(p) ? 'you' : `<b>${escapeHtml((p.display_name || 'Someone').split(' ')[0])}</b>`;
+  // put the viewer first so it reads "you and Aman", not "Aman and you"
+  const ordered = list.slice().sort((a, b) => (isMe(b) ? 1 : 0) - (isMe(a) ? 1 : 0));
+  const others = Math.max(n, ordered.length) - 1;
+  let text;
+  if(others === 0) text = `Cheers from ${name(ordered[0])}`;
+  else if(others === 1 && ordered[1]) text = `Cheers from ${name(ordered[0])} and ${name(ordered[1])}`;
+  else text = `Cheers from ${name(ordered[0])} and <b>${others}</b> others`;
+  return `<span class="mini-avatars">${ordered.slice(0, 3).map(cheererAvatarHtml).join('')}</span><span>${text}</span>`;
+}
+function refreshCheersSummary(ev, uid){
+  const el = document.getElementById(`${uid}-cheerers`);
+  if(!el) return;
+  el.hidden = !(ev.cheersCount > 0);
+  el.innerHTML = cheersSummaryHtml(ev);
+}
+function openCheersSheet(eventId){
+  const ev = findEvent(eventId);
+  if(!ev) return;
+  const list = ev.cheerers || [];
+  document.getElementById('list-sheet-title').textContent = ev.cheersCount === 1 ? '1 cheers' : `${ev.cheersCount} cheers`;
+  document.getElementById('list-sheet-body').innerHTML = list.length
+    ? list.map(p => `
+      <div class="user-row" onclick="closeListSheet(); goToPersonProfile('${p.id}')">
+        <div class="user-avatar"${p.photo_url ? ` style="background:url(${p.photo_url}) center/cover"` : ''}>${p.photo_url ? '' : ICON_PERSON}</div>
+        <div class="user-meta"><div class="user-name">${escapeHtml(p.display_name || 'Someone')}</div>${p.username ? `<div class="user-handle">@${escapeHtml(p.username)}</div>` : ''}</div>
+        <span class="row-cheers" aria-hidden="true">🥂</span>
+      </div>`).join('')
+    : `<div class="empty">Couldn't load who cheered. Check your connection.</div>`;
+  document.getElementById('list-sheet-backdrop').classList.add('show');
+}
+function closeListSheet(){ document.getElementById('list-sheet-backdrop').classList.remove('show'); }
+document.getElementById('list-sheet-backdrop').addEventListener('click', e => { if(e.target.id === 'list-sheet-backdrop') closeListSheet(); });
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeListSheet(); });
+
 async function toggleCheers(eventId, uid){
   if(!currentUser) return;
   const ev = findEvent(eventId);
@@ -2502,7 +2544,7 @@ async function toggleCheers(eventId, uid){
   ev.cheersCount += ev.cheered ? 1 : -1;
   const btn = document.getElementById(`${uid}-cheers`);
   btn.classList.toggle('liked', ev.cheered);
-  btn.innerHTML = `<span class="cheers-emoji">🥂</span> Cheers <span>(${ev.cheersCount})</span>`;
+  setOwnCheer(ev, ev.cheered); refreshCheersSummary(ev, uid);
   // Only pop on the way to cheered, not on the way off — celebrating an
   // add without also "punishing" a remove with the same motion.
   if(ev.cheered) popCheersEmoji(btn);
@@ -2515,7 +2557,7 @@ async function toggleCheers(eventId, uid){
     ev.cheered = wasCheered;
     ev.cheersCount += wasCheered ? 1 : -1;
     btn.classList.toggle('liked', ev.cheered);
-    btn.innerHTML = `<span class="cheers-emoji">🥂</span> Cheers <span>(${ev.cheersCount})</span>`;
+    setOwnCheer(ev, ev.cheered); refreshCheersSummary(ev, uid);
   }
 }
 function popCheersEmoji(btn){
@@ -2600,6 +2642,7 @@ async function renderFeed(){
 
   const cheeredSet = await viewerCheeredEventIds();
   const events = (rows || []).map(r => normalizeEventRow(r, cheeredSet));
+  await attachCheerers(events);
 
   if(events.length === 0){
     body.innerHTML = `
@@ -2650,6 +2693,7 @@ async function renderYou(){
 
   if(error){ body.innerHTML = `<div class="empty">Couldn't load your sessions. Check your connection.</div>`; return; }
   const events = (rows || []).map(r => normalizeEventRow(r));
+  await attachCheerers(events);
   document.getElementById('you-sub').textContent = `${events.length} session${events.length===1?'':'s'} logged`;
 
   if(events.length === 0){
@@ -2845,6 +2889,7 @@ async function renderUserProfile(userId){
   const body = document.getElementById('view-profile-body');
   if(error){ body.innerHTML = `<div class="empty">Couldn't load their sessions.</div>`; return; }
   const events = (rows || []).map(r => normalizeEventRow(r));
+  await attachCheerers(events);
   events.forEach(ev => { ev.author = { id: userId, name: profileRow.display_name, photo: profileRow.photo_url }; });
   document.getElementById('view-profile-sub').textContent = `${events.length} session${events.length===1?'':'s'} logged`;
   if(events.length === 0){
