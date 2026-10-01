@@ -1,0 +1,8 @@
+{
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "redirects": [
+    { "source": "/strava-for-beer", "destination": "/strava-for-drinking", "permanent": true },
+    { "source": "/strava-for-beers", "destination": "/strava-for-drinking", "permanent": true }
+  ]
+}
