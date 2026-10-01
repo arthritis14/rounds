@@ -29,7 +29,7 @@
 <meta name="twitter:title" content="Rounds: the Strava for drinking" />
 <meta name="twitter:description" content="Rounds is the Strava for drinking. Log every beer and cocktail on a night out, graph your night and see your friends' rounds. Free, in your browser." />
 <meta name="twitter:image" content="https://rounds-dun-seven.vercel.app/og-image.jpg" />
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://rounds-dun-seven.vercel.app/#website", "url": "https://rounds-dun-seven.vercel.app/", "name": "Rounds", "alternateName": ["Rounds app", "Strava for drinking", "Strava for beer"]}, {"@type": "WebApplication", "@id": "https://rounds-dun-seven.vercel.app/#app", "name": "Rounds", "url": "https://rounds-dun-seven.vercel.app/", "description": "Rounds is the Strava for drinking. Log every beer and cocktail on a night out, graph your night and see your friends' rounds. Free, in your browser.", "applicationCategory": "LifestyleApplication", "operatingSystem": "Any (web browser)", "browserRequirements": "Requires JavaScript", "image": "https://rounds-dun-seven.vercel.app/og-image.jpg", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://rounds-dun-seven.vercel.app/#website", "url": "https://rounds-dun-seven.vercel.app/", "name": "Rounds", "alternateName": ["Rounds app", "Strava for drinking", "Strava for beer"]}, {"@type": "WebApplication", "@id": "https://rounds-dun-seven.vercel.app/#app", "name": "Rounds", "url": "https://rounds-dun-seven.vercel.app/", "description": "Rounds is the Strava for drinking. Log every beer and cocktail on a night out, graph your night and see your friends' rounds. Free, in your browser.", "applicationCategory": "LifestyleApplication", "operatingSystem": "Any (web browser)", "browserRequirements": "Requires JavaScript", "image": "https://rounds-dun-seven.vercel.app/og-image.jpg", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is there a Strava for drinking?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, that's Rounds. Start a session, log each beer or cocktail as it arrives, then post the night with a graph, your pace and the time. Friends cheer it the way they give kudos on Strava."}}, {"@type": "Question", "name": "Is there a Strava for beer?", "acceptedAnswer": {"@type": "Answer", "text": "Pick beer mode and every pint, can or pitcher becomes a step on your graph, so you can compare the night with your friends'."}}, {"@type": "Question", "name": "Is it free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Rounds is free and runs in your phone's browser, so there's nothing to download."}}]}]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
@@ -141,6 +141,14 @@
   #screen-auth.active{ display:flex; flex-direction:column; }
   .auth-hero{ flex:1; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; padding:40px 4px 24px; }
   .auth-hero .brand-logo{ margin-bottom:40px; }
+  .auth-eyebrow{ font-size:14px; font-weight:500; color:var(--primary-light); margin:0 0 10px; }
+  /* Below the fold: plain text Google can read, so the app itself can rank. */
+  .auth-about{ border-top:1px solid var(--line); margin-top:28px; padding:28px 4px calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .auth-about h2{ font-size:20px; font-weight:600; letter-spacing:-0.025em; margin:0 0 6px; }
+  .auth-qa{ padding:14px 0; border-bottom:1px solid var(--line); }
+  .auth-qa h3{ font-size:15px; font-weight:600; letter-spacing:-0.01em; margin:0 0 4px; }
+  .auth-qa p{ font-size:14px; line-height:1.5; color:var(--muted); margin:0; }
+  .auth-legal{ font-size:12px; color:var(--faint); line-height:1.5; margin:16px 0 0; }
   .auth-hero h1{ font-size:40px; line-height:1.02; letter-spacing:-0.045em; margin:0 0 14px; }
   .auth-hero p.sub{ margin:0; font-size:16px; max-width:30ch; }
   .auth-graph{ width:100%; max-width:300px; height:auto; margin:0 0 36px -2px; overflow:visible; }
@@ -170,7 +178,6 @@
   #signup-wordmark{ display:none; }
   .auth-actions .back-link, #auth-mode-toggle{ display:flex !important; justify-content:center; width:100%; height:44px; margin:8px 0 0 !important; padding:0; font-size:14.5px; }
   .auth-actions .back-link b, #auth-mode-toggle b{ color:var(--ink); font-weight:600; }
-  .auth-footnote a{ color:var(--muted); text-decoration:none; }
   .auth-footnote{ text-align:center; color:var(--faint); font-size:12px; margin-top:18px; padding:0 30px calc(4px + env(safe-area-inset-bottom, 0px)); letter-spacing:0; }
 
   .avatar-picker{
@@ -514,6 +521,7 @@
   }
 
   @media (max-width:360px){ .timer{font-size:46px;} .start-ring{width:160px;height:160px;} .auth-hero h1{font-size:34px;} }
+  @media (max-height:720px){ .auth-hero{ padding-top:20px; } .auth-hero .brand-logo{ margin-bottom:26px; } .auth-graph{ margin-bottom:24px; } }
 
   /* Reduced motion means gentler, not none: keep fades (they aid
      comprehension), drop travel, scaling and decorative loops. */
@@ -539,8 +547,9 @@
     <div class="auth-hero">
       <img class="brand-logo lg" src="/logo.webp" width="406" height="120" alt="Rounds">
       <svg class="auth-graph" viewBox="0 0 300 96" aria-hidden="true"><line class="grid" x1="0" y1="94" x2="300" y2="94"/><path class="step" d="M4 90 H48 V70 H112 V52 H150 V36 H214 V20 H262 V6 H296"/><circle class="pin" cx="48" cy="70" r="5" style="animation-delay:330ms"/><circle class="pin" cx="112" cy="52" r="5" style="animation-delay:520ms"/><circle class="pin" cx="150" cy="36" r="5" style="animation-delay:640ms"/><circle class="pin" cx="214" cy="20" r="5" style="animation-delay:830ms"/><circle class="pin" cx="262" cy="6" r="5" style="animation-delay:990ms"/></svg>
+      <p class="auth-eyebrow">The Strava for drinking</p>
       <h1>Every round,<br/>on the record.</h1>
-      <p class="sub">Log drinks as you go, post the night, and keep up with your friends.</p>
+      <p class="sub">Log every beer and cocktail as you go, post the night, and keep up with your friends.</p>
     </div>
     <div class="auth-actions">
       <button class="btn-google" onclick="continueWithGoogle(this)">
@@ -551,7 +560,14 @@
       <button class="btn-create" onclick="showScreen('screen-signup')">Sign up with email</button>
       <a class="back-link" onclick="openLoginScreen()">Already have an account?&nbsp;<b>Log in</b></a>
     </div>
-    <div class="auth-footnote"><a href="/strava-for-drinking">What is Rounds?</a> &nbsp;&middot;&nbsp; A Vilicon Salley Production</div>
+    <div class="auth-footnote">A Vilicon Salley Production</div>
+    <div class="auth-about">
+      <h2>What is Rounds?</h2>
+      <div class="auth-qa"><h3>Is there a Strava for drinking?</h3><p>Yes, that's Rounds. Start a session, log each beer or cocktail as it arrives, then post the night with a graph, your pace and the time. Friends cheer it the way they give kudos on Strava.</p></div>
+      <div class="auth-qa"><h3>Is there a Strava for beer?</h3><p>Pick beer mode and every pint, can or pitcher becomes a step on your graph, so you can compare the night with your friends'.</p></div>
+      <div class="auth-qa"><h3>Is it free?</h3><p>Yes. Rounds is free and runs in your phone's browser, so there's nothing to download.</p></div>
+      <p class="auth-legal">For adults of legal drinking age. Please drink responsibly. Rounds isn't affiliated with Strava, Inc.</p>
+    </div>
   </section>
 
   <!-- SIGN UP -->
