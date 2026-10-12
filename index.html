@@ -408,11 +408,20 @@
     border:1px solid rgba(255,255,255,.1); cursor:pointer; flex:none;
   }
   .share-preview{ position:relative; width:100%; height:100%; background:transparent; }
-  .share-preview svg{ position:absolute; inset:0; width:100%; height:100%; filter:drop-shadow(0 1px 2px rgba(0,0,0,.65)) drop-shadow(0 0 5px rgba(0,0,0,.4)); }
-  .share-preview .stats{ position:absolute; z-index:2; top:20px; left:20px; display:flex; flex-direction:column; gap:2px; }
-  .share-preview .stats .l{ font-size:11.5px; line-height:1.3; color:rgba(255,255,255,.85); text-shadow:0 1px 4px rgba(0,0,0,.6); }
-  .share-preview .stats .v{ font-weight:600; font-size:25px; letter-spacing:-0.035em; font-variant-numeric:tabular-nums; line-height:1.15; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.6); margin-bottom:8px; }
-  .share-preview .wm{ position:absolute; z-index:2; bottom:16px; left:0; right:0; display:flex; justify-content:center; }
+  /* The sticker: fully transparent (it gets laid over a photo/video), so legibility comes from shadows, never a backing panel.
+     html2canvas can't render CSS filter/backdrop-filter, so text uses text-shadow and the chart bakes its shadow into the SVG. */
+  .share-preview .card{ position:absolute; z-index:1; left:12px; right:12px; top:96px; bottom:64px; box-sizing:border-box; padding:4px 0 0; display:flex; flex-direction:column; }
+  .share-preview .stats{ display:flex; flex:none; padding-bottom:10px; margin:0 4px; }
+  .share-preview .stats .cell{ flex:1 1 0; min-width:0; text-align:center; }
+  .share-preview .stats .cell + .cell{ border-left:1px solid rgba(255,255,255,.45); }
+  .share-preview .stats .v{ font-family:var(--font-sans); font-weight:700; font-size:24px; letter-spacing:-0.03em; font-variant-numeric:tabular-nums; line-height:1.15; color:#fff; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.55), 0 2px 12px rgba(0,0,0,.45); }
+  .share-preview .stats .v.accent{ color:#FF8147; }
+  .share-preview .stats .l{ margin-top:3px; font-family:var(--font-sans); font-weight:600; font-size:7.5px; letter-spacing:.2em; text-transform:uppercase; color:rgba(255,255,255,.92); text-shadow:0 1px 3px rgba(0,0,0,.6), 0 1px 8px rgba(0,0,0,.4); }
+  .share-preview .card svg{ font-family:var(--font-sans); font-weight:600; display:block; width:236px; height:222px; flex:none; margin-top:6px; }
+  .share-preview .wm{ position:absolute; z-index:2; bottom:24px; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:8px; font-family:var(--font-sans); font-weight:800; font-size:12px; letter-spacing:.3em; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.55); }
+  .share-preview .wm span{ color:var(--primary-light); }
+  .share-preview .wm i{ font-style:normal; font-weight:600; font-size:8.5px; letter-spacing:.2em; text-transform:uppercase; color:rgba(255,255,255,.92); }
+  .share-preview .wm .dot{ width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,.5); }
 
   .share-fallback-row{ display:flex; gap:10px; padding:16px 24px calc(24px + env(safe-area-inset-bottom, 0px)); flex:none; max-width:430px; width:100%; margin:0 auto; }
   .share-fallback-row button{ flex:1; height:50px; margin:0; background:rgba(255,255,255,.1); border:none; color:#fff; font-weight:600; font-size:15px; border-radius:14px; cursor:pointer; transition:transform var(--press), background-color 150ms ease; }
@@ -776,9 +785,11 @@
   <div class="share-preview-scroll">
     <div class="share-preview-outer">
       <div class="share-preview" id="share-preview">
-        <svg id="share-chart-svg-modal" viewBox="0 0 260 462"></svg>
-        <div class="stats" id="share-stats"></div>
-        <div class="wm"><img class="brand-logo" src="/logo.webp" width="406" height="120" alt="Rounds" style="height:14px;width:auto;display:inline-block;"></div>
+        <div class="card">
+          <div class="stats" id="share-stats"></div>
+          <svg id="share-chart-svg-modal" viewBox="0 0 236 222"></svg>
+        </div>
+        <div class="wm"><img class="brand-logo" src="/logo.webp" width="406" height="120" alt="Rounds" style="height:14px;width:auto;display:inline-block;"><span class="dot"></span><i id="share-day"></i></div>
       </div>
     </div>
   </div>
@@ -2110,34 +2121,24 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
       count++;
       d += ` L${x.toFixed(1)},${yScale(count).toFixed(1)}`;
     }
-    markers += `<g><circle cx="${x.toFixed(1)}" cy="${yScale(count).toFixed(1)}" r="${opts.pinR||9}" fill="#fff" stroke="${isDrink(e) ? '#FC4C02' : '#9A9AA2'}" stroke-width="2"/><text x="${x.toFixed(1)}" y="${(yScale(count)+1).toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="${(opts.pinR||9)*1.1}">${EMOJI[e.type] || ''}</text></g>`;
+    markers += `<g>${opts.story ? `<circle cx="${x.toFixed(1)}" cy="${yScale(count).toFixed(1)}" r="${(opts.pinR||9)+3}" fill="#FF5A1F" fill-opacity=".25"/>` : ''}<circle cx="${x.toFixed(1)}" cy="${yScale(count).toFixed(1)}" r="${opts.pinR||9}" fill="#fff" stroke="${isDrink(e) ? '#FC4C02' : '#9A9AA2'}" stroke-width="2"/><text x="${x.toFixed(1)}" y="${(yScale(count)+1).toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="${(opts.pinR||9)*1.1}">${EMOJI[e.type] || ''}</text></g>`;
   });
   d += ` L${xScale(endTime).toFixed(1)},${yScale(count).toFixed(1)}`;
 
-  // Real clock-aligned gridlines: a line every hour, on the hour, for any
-  // session an hour or longer (stepping up to 2/3/4/6/8/12-hour intervals
-  // only once an hourly grid would get too dense to read). Under an hour,
-  // step down to nice sub-hour intervals so a short session still gets a
-  // genuine, readable grid instead of collapsing to one or two lines.
+  // X axis: the start of the round is point 0 (left edge, unlabeled), and every
+  // local whole hour the round runs through is labeled at its true proportional
+  // position ("8 pm", "9 pm", ...). Only thinned (every 2nd, 3rd...) if the
+  // chart is too narrow to fit them all.
   const oneHour = 3600000;
-  let step;
-  if(dur >= oneHour){
-    const hourSteps = [1,2,3,4,6,8,12].map(hr=>hr*oneHour);
-    step = hourSteps[hourSteps.length-1];
-    for(const s of hourSteps){ if(dur/s <= 8){ step = s; break; } }
-  } else {
-    const subHourSteps = [5,10,15,20,30].map(m=>m*60000);
-    step = subHourSteps[subHourSteps.length-1];
-    for(const s of subHourSteps){ if(dur/s <= 7){ step = s; break; } }
-  }
+  const fmtHour = t => { const h = new Date(t).getHours(); return `${h % 12 || 12} ${h < 12 ? 'am' : 'pm'}`; };
   const tickTimes = [];
-  for(let t = Math.ceil(startTime/step)*step; t <= endTime; t += step) tickTimes.push(t);
-  if(tickTimes.length===0 || tickTimes[0]-startTime > step*0.35) tickTimes.unshift(startTime);
-  if(endTime - tickTimes[tickTimes.length-1] > step*0.35) tickTimes.push(endTime);
-  const useMinutePrecision = step < oneHour;
-  const formatTick = t => useMinutePrecision
-    ? new Date(t).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', hour12:false })
-    : formatHour(t);
+  // Local whole hours (not UTC-aligned: half-hour timezones like IST would otherwise land on :30).
+  const firstHour = new Date(startTime); firstHour.setMinutes(0, 0, 0);
+  if(firstHour.getTime() <= startTime) firstHour.setHours(firstHour.getHours() + 1);
+  for(let d = firstHour; d.getTime() <= endTime; d.setHours(d.getHours() + 1)) tickTimes.push(d.getTime());
+  const skip = Math.max(1, Math.ceil(tickTimes.length / Math.max(1, Math.floor(innerW / 34))));
+  for(let i = tickTimes.length - 1; i >= 0; i--) if(i % skip !== 0) tickTimes.splice(i, 1);
+  const formatTick = fmtHour;
   const axisColor = opts.axisColor || textColor;
 
   // X-axis time labels only, no vertical gridlines through the chart body —
@@ -2155,7 +2156,7 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   let ticks = '';
   keptTicks.forEach((t, i) => {
     const x = xScale(t);
-    const anchor = i===0 ? 'start' : (i===keptTicks.length-1 ? 'end' : 'middle');
+    const anchor = x + 14 > w ? 'end' : 'middle';
     ticks += `<text${textClass} x="${x.toFixed(1)}" y="${h-padB+13}" text-anchor="${anchor}" font-size="9" fill="${textColor}">${formatTick(t)}</text>`;
   });
 
@@ -2169,10 +2170,25 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   let yLabels = '';
   for(let c = 0; c <= maxCount; c++){
     const y = yScale(c);
-    yLabels += `<line${gridClass} x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="${gridColor}" stroke-width="${gridStrokeWidth}"/>`;
+    yLabels += `<line${gridClass} x1="${padL}" y1="${y.toFixed(1)}" x2="${w-padR}" y2="${y.toFixed(1)}" stroke="${gridColor}" stroke-width="${gridStrokeWidth}"${opts.story ? ' stroke-dasharray="1.5 4" stroke-linecap="round"' : ''}/>`;
     yLabels += `<text${textClass} x="${padL - ((opts.pinR||9) + 4)}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="${textColor}">${c}</text>`;
   }
 
+  if(opts.story){
+    // Story-share styling: a glowing ember gradient line over a soft area fill,
+    // faint dotted rungs and no hard axis lines, so it sits quietly on a photo.
+    const x0 = xScale(startTime).toFixed(1), x1 = xScale(endTime).toFixed(1), yb = yScale(0).toFixed(1);
+    const defs = `<defs>
+      <linearGradient id="sg-line" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FF9A5C"/><stop offset=".55" stop-color="#FF5A1F"/><stop offset="1" stop-color="#FF2E63"/></linearGradient>
+      <linearGradient id="sg-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF5A1F" stop-opacity=".3"/><stop offset="1" stop-color="#FF5A1F" stop-opacity="0"/></linearGradient>
+      <filter id="sg-shadow" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.8"/><feOffset dy="1" result="b"/><feComponentTransfer><feFuncA type="linear" slope=".7"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>`;
+    const area = `<path d="${d} L${x1},${yb} L${x0},${yb} Z" fill="url(#sg-area)" stroke="none"/>`;
+    const glow = `<path d="${d}" fill="none" stroke="#FF5A1F" stroke-opacity=".22" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="#FF7A3D" stroke-opacity=".35" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const line = `<path d="${d}" fill="none" stroke="url(#sg-line)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const baseline = `<line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="${axisColor}" stroke-width="1" stroke-linecap="round"/>`;
+    return `${defs}<g filter="url(#sg-shadow)">${yLabels}${ticks}${baseline}${area}${glow}${line}${markers}</g>`;
+  }
   return `${yLabels}${yAxisLine}${ticks}${axisLine}<path d="${d}" fill="none" stroke="#FC4C02" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>${markers}`;
 }
 
@@ -2932,14 +2948,17 @@ function closeShareModal(){
 }
 
 function renderSharePreview(ev){
+  const pace = ev.pace === '\u2014' ? ev.pace : ev.pace.replace('/round', '');
+  const day = new Date(ev.startTime).toLocaleDateString([], { weekday:'short', day:'numeric', month:'short' }).replace(',', '');
   document.getElementById('share-stats').innerHTML = `
-    <div class="l">Rounds</div><div class="v">${ev.total}</div>
-    <div class="l">Pace</div><div class="v">${ev.pace}</div>
-    <div class="l">Time</div><div class="v">${formatDurationShort(ev.duration)}</div>`;
+    <div class="cell"><div class="v accent">${ev.total}</div><div class="l">Rounds</div></div>
+    <div class="cell"><div class="v">${pace}</div><div class="l">Per round</div></div>
+    <div class="cell"><div class="v">${formatDurationShort(ev.duration)}</div><div class="l">Time</div></div>`;
+  document.getElementById('share-day').textContent = day;
   document.getElementById('share-chart-svg-modal').innerHTML =
-    buildCountChart(ev.entries, ev.startTime, ev.endTime, 260, 462, {
-      textColor:'#fff', gridColor:'rgba(255,255,255,.4)', axisColor:'rgba(255,255,255,.62)', pinR:13,
-      padL:34, padR:16, padT:236, padB:70,
+    buildCountChart(ev.entries, ev.startTime, ev.endTime, 236, 222, {
+      story:true, textColor:'#fff', gridColor:'rgba(255,255,255,.42)', axisColor:'rgba(255,255,255,.75)', pinR:9,
+      padL:30, padR:12, padT:16, padB:24, gridStrokeWidth:1,
     });
 }
 
