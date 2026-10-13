@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="color-scheme" content="dark light" />
+<title>Rounds Admin</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#111111; --surface:#1A1A1A; --surface2:#222222; --primary:#FF4B16; --primary-tint:rgba(255,75,22,.16);
+    --ink:#FFFFFF; --muted:#9A9A9A; --line:#2C2C2C; --danger:#E0483A; --good:#3DBE7A;
+    --font-sans:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; --font-display:'Anton',sans-serif;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#FAFAFA; --surface:#FFFFFF; --surface2:#F1F1F1; --primary-tint:#FFE9E1; --ink:#111111; --muted:#71717A; --line:#E5E5E5; --danger:#D64832; --good:#1E9E5A; }
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-sans);font-size:14px;-webkit-font-smoothing:antialiased;}
+  button{font:inherit;color:inherit;cursor:pointer;}
+  input,select{font:inherit;color:inherit;}
+  a{color:var(--primary);}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 16px 80px;}
+  header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+  .hbar{max-width:1180px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .brand{font-family:var(--font-display);font-size:22px;letter-spacing:.02em;text-transform:uppercase;}
+  .brand span{color:var(--primary);}
+  nav{display:flex;gap:4px;}
+  nav button{background:none;border:0;padding:8px 14px;border-radius:10px;color:var(--muted);font-weight:600;}
+  nav button.on{background:var(--surface2);color:var(--ink);}
+  .sp{flex:1;}
+  .who{color:var(--muted);font-size:12px;}
+  .btn{background:var(--surface2);border:1px solid var(--line);padding:8px 14px;border-radius:10px;font-weight:600;}
+  .btn:hover{border-color:var(--muted);}
+  .btn.pri{background:var(--primary);border-color:var(--primary);color:#fff;}
+  .btn.danger{color:var(--danger);}
+  .btn.sm{padding:5px 10px;font-size:12px;border-radius:8px;}
+  h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:28px 0 10px;font-weight:700;}
+  .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;}
+  .stat .l{color:var(--muted);font-size:12px;font-weight:600;}
+  .stat .v{font-size:28px;font-weight:800;letter-spacing:-.02em;margin-top:4px;font-variant-numeric:tabular-nums;}
+  .stat .d{font-size:12px;color:var(--muted);margin-top:2px;}
+  .up{color:var(--good);} .down{color:var(--danger);}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;}
+  .chip{background:var(--surface);border:1px solid var(--line);padding:6px 12px;border-radius:99px;font-size:12px;font-weight:600;color:var(--muted);}
+  .chip.on{background:var(--primary-tint);border-color:var(--primary);color:var(--primary);}
+  .chartHead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+  svg.chart{width:100%;height:220px;display:block;}
+  svg.chart .bar{fill:var(--primary);} svg.chart .bar:hover{fill:#FF7548;}
+  svg.chart text{fill:var(--muted);font-size:10px;font-family:var(--font-sans);}
+  svg.chart line{stroke:var(--line);}
+  table{width:100%;border-collapse:collapse;}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  th{color:var(--muted);font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;user-select:none;}
+  th.s{cursor:pointer;} th.s:hover{color:var(--ink);} th .ar{color:var(--primary);}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;}
+  tbody tr{cursor:pointer;} tbody tr:hover{background:var(--surface2);}
+  .tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface);}
+  .tw table tr:last-child td{border-bottom:0;}
+  .u{display:flex;align-items:center;gap:10px;}
+  .av{width:34px;height:34px;border-radius:50%;background:var(--surface2);object-fit:cover;flex:none;display:grid;place-items:center;font-weight:700;color:var(--muted);overflow:hidden;}
+  .av img{width:100%;height:100%;object-fit:cover;}
+  .u b{display:block;font-weight:600;} .u small{color:var(--muted);}
+  .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--surface2);color:var(--muted);}
+  .tag.g{color:#7aa7ff;} .tag.ok{color:var(--good);} .tag.adm{background:var(--primary-tint);color:var(--primary);}
+  .tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+  .search{flex:1;min-width:200px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px;outline:none;}
+  .search:focus{border-color:var(--primary);}
+  .pager{display:flex;justify-content:space-between;align-items:center;margin-top:12px;color:var(--muted);}
+  .muted{color:var(--muted);}
+  .empty{padding:40px;text-align:center;color:var(--muted);}
+  .ev{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:12px;}
+  .ev .top{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+  .ev h3{margin:10px 0 2px;font-size:16px;} .ev p{margin:4px 0 0;color:var(--muted);white-space:pre-wrap;word-break:break-word;}
+  .meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12px;color:var(--muted);}
+  .meta b{color:var(--ink);}
+  .photos{display:flex;gap:8px;overflow-x:auto;margin-top:12px;padding-bottom:4px;}
+  .photos img{height:120px;width:auto;border-radius:10px;cursor:zoom-in;flex:none;background:var(--surface2);}
+  .photos .ph{position:relative;flex:none;} .photos .ph span{position:absolute;left:6px;bottom:6px;font-size:10px;font-weight:700;background:rgba(0,0,0,.65);color:#fff;border-radius:6px;padding:2px 6px;}
+  .cm{border-top:1px solid var(--line);margin-top:12px;padding-top:8px;}
+  .cm div{display:flex;justify-content:space-between;gap:10px;padding:6px 0;}
+  .cm .t{word-break:break-word;} .cm small{color:var(--muted);}
+  #drawer{position:fixed;inset:0;z-index:40;display:none;}
+  #drawer.open{display:block;}
+  #drawer .bk{position:absolute;inset:0;background:rgba(0,0,0,.55);}
+  #drawer .pn{position:absolute;right:0;top:0;bottom:0;width:min(680px,100%);background:var(--bg);border-left:1px solid var(--line);overflow-y:auto;padding:18px 18px 60px;}
+  .x{float:right;}
+  .kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:16px 0;}
+  .kv .card{padding:10px 12px;} .kv .v{font-size:20px;font-weight:800;} .kv .l{font-size:11px;color:var(--muted);font-weight:600;}
+  #lightbox{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;cursor:zoom-out;}
+  #lightbox.open{display:flex;} #lightbox img{max-width:94vw;max-height:94vh;border-radius:8px;}
+  .login{max-width:360px;margin:12vh auto;text-align:center;}
+  .login .brand{font-size:34px;margin-bottom:6px;}
+  .login input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin-top:10px;outline:none;}
+  .login input:focus{border-color:var(--primary);}
+  .login .btn{width:100%;margin-top:12px;padding:11px;}
+  .err{color:var(--danger);margin-top:12px;min-height:18px;}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--line);padding:10px 16px;border-radius:10px;z-index:80;display:none;}
+  .two{display:grid;gap:12px;grid-template-columns:1fr 1fr;} @media(max-width:760px){.two{grid-template-columns:1fr;} .hide-m{display:none;}}
+  .bars .row{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:12px;}
+  .bars .row .lbl{width:92px;color:var(--muted);flex:none;} .bars .row .tr{flex:1;background:var(--surface2);border-radius:99px;height:8px;overflow:hidden;}
+  .bars .row .tr i{display:block;height:100%;background:var(--primary);border-radius:99px;} .bars .row .num{width:70px;text-align:right;font-variant-numeric:tabular-nums;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="drawer"><div class="bk" onclick="closeDrawer()"></div><div class="pn" id="drawer-body"></div></div>
+<div id="lightbox" onclick="this.classList.remove('open')"><img alt=""></div>
+<div id="toast"></div>
+
+<script>
+const sb = supabase.createClient('https://ljbhsdkpguuujbykwngt.supabase.co', 'sb_publishable_Nfu52QbtWDrqpXbEAH8l2A_AyXjjR89');
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const nf = n => Number(n || 0).toLocaleString();
+const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : '';
+function toast(m){ const t = $('#toast'); t.textContent = m; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = 'none', 3000); }
+function ago(ts){
+  if(!ts) return '—';
+  const s = (Date.now() - new Date(ts).getTime()) / 1000;
+  if(s < 60) return 'just now'; if(s < 3600) return Math.floor(s/60) + 'm ago';
+  if(s < 86400) return Math.floor(s/3600) + 'h ago'; if(s < 86400*30) return Math.floor(s/86400) + 'd ago';
+  return new Date(ts).toLocaleDateString(undefined, {day:'numeric', month:'short', year:'numeric'});
+}
+const when = ts => ts ? new Date(ts).toLocaleString(undefined, {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '—';
+function dur(ms){ ms = Number(ms) || 0; const m = Math.round(ms/60000); return m >= 60 ? Math.floor(m/60) + 'h ' + (m%60) + 'm' : m + 'm'; }
+function delta(cur, prev){
+  if(!prev && !cur) return ''; if(!prev) return '<span class="up">▲ new</span>';
+  const p = Math.round((cur - prev) / prev * 100);
+  return `<span class="${p >= 0 ? 'up' : 'down'}">${p >= 0 ? '▲' : '▼'} ${Math.abs(p)}%</span>`;
+}
+function avatar(p){
+  const u = safeUrl(p.photo_url);
+  return `<div class="av">${u ? `<img src="${esc(u)}" alt="" loading="lazy">` : esc((p.display_name || p.username || '?')[0].toUpperCase())}</div>`;
+}
+async function rpc(fn, args){
+  const { data, error } = await sb.rpc(fn, args);
+  if(error){ if(error.code === '42501') { toast('Not authorized'); } throw error; }
+  return data;
+}
+
+// ---------------- auth gate ----------------
+let me = null;
+async function boot(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session) return renderLogin();
+  me = session.user;
+  let ok = false;
+  try{ ok = await rpc('is_admin'); }catch(e){}
+  if(!ok) return renderDenied();
+  renderShell();
+}
+function renderLogin(msg){
+  $('#app').innerHTML = `<div class="login"><div class="brand">Rounds <span>Admin</span></div>
+    <div class="muted">Admins only. Sign in with your Rounds account.</div>
+    <form onsubmit="return doLogin(event)"><input id="em" type="email" placeholder="Email" autocomplete="username" required>
+    <input id="pw" type="password" placeholder="Password" autocomplete="current-password" required>
+    <button class="btn pri" type="submit">Sign in</button></form>
+    <button class="btn" onclick="doGoogle()">Continue with Google</button><div class="err">${esc(msg || '')}</div></div>`;
+}
+async function doLogin(e){
+  e.preventDefault();
+  const { error } = await sb.auth.signInWithPassword({ email: $('#em').value.trim(), password: $('#pw').value });
+  if(error) return renderLogin(error.message);
+  boot(); return false;
+}
+async function doGoogle(){
+  await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
+}
+function renderDenied(){
+  $('#app').innerHTML = `<div class="login"><div class="brand">Rounds <span>Admin</span></div>
+    <p class="muted">${esc(me?.email || '')} isn't an admin.</p><button class="btn" onclick="signOut()">Sign out</button></div>`;
+}
+async function signOut(){ await sb.auth.signOut(); location.reload(); }
+
+// ---------------- shell ----------------
+let tab = 'overview';
+function renderShell(){
+  $('#app').innerHTML = `<header><div class="hbar"><div class="brand">Rounds <span>Admin</span></div>
+    <nav>${['overview','users','rounds'].map(t => `<button data-t="${t}" onclick="go('${t}')">${t[0].toUpperCase() + t.slice(1)}</button>`).join('')}</nav>
+    <div class="sp"></div><span class="who hide-m">${esc(me.email)}</span>
+    <button class="btn sm" onclick="go(tab)">Refresh</button><button class="btn sm" onclick="signOut()">Sign out</button></div></header>
+    <div class="wrap" id="view"></div>`;
+  go('overview');
+}
+function go(t){
+  tab = t;
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  $('#view').innerHTML = '<div class="empty">Loading…</div>';
+  ({ overview: loadOverview, users: loadUsers, rounds: loadRounds })[t]().catch(err => {
+    $('#view').innerHTML = `<div class="empty">Couldn't load: ${esc(err.message || err)}</div>`;
+  });
+}
+
+// ---------------- overview ----------------
+let daily = [], chartMetric = 'signups', chartDays = 30;
+const METRICS = { signups: 'New users', active_users: 'Active users', rounds: 'Rounds posted', drinks: 'Drinks logged', cheers: 'Cheers', comments: 'Comments', follows: 'Follows' };
+function stat(l, v, d){ return `<div class="card stat"><div class="l">${l}</div><div class="v">${v}</div><div class="d">${d || '&nbsp;'}</div></div>`; }
+async function loadOverview(){
+  const [o, d] = await Promise.all([rpc('admin_overview'), rpc('admin_daily', { days: 90 })]);
+  daily = d;
+  const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
+  $('#view').innerHTML = `
+    <h2>Users</h2><div class="grid">
+      ${stat('Total users', nf(o.users_total), `${nf(o.users_google)} Google · ${nf(o.users_email)} email`)}
+      ${stat('Joined today', nf(o.users_today), `Yesterday ${nf(o.users_yesterday)}`)}
+      ${stat('Joined last 7 days', nf(o.users_7d), `${delta(o.users_7d, o.users_prev_7d)} vs prior 7d`)}
+      ${stat('Joined last 30 days', nf(o.users_30d))}
+      ${stat('Active · 24h (DAU)', nf(o.dau), `${pct(o.dau, o.users_total)} of users`)}
+      ${stat('Active · 7d (WAU)', nf(o.wau), `${pct(o.wau, o.users_total)} of users`)}
+      ${stat('Active · 30d (MAU)', nf(o.mau), `${pct(o.mau, o.users_total)} of users`)}
+      ${stat('Came back after day 1', pct(o.retained_d7, o.eligible_d7), `of ${nf(o.eligible_d7)} users 7d+ old`)}
+    </div>
+    <h2>Rounds</h2><div class="grid">
+      ${stat('Rounds posted', nf(o.rounds_total), `${nf(o.posters_total)} users have posted (${pct(o.posters_total, o.users_total)})`)}
+      ${stat('Posted today', nf(o.rounds_today), `Yesterday ${nf(o.rounds_yesterday)}`)}
+      ${stat('Last 7 days', nf(o.rounds_7d), `${delta(o.rounds_7d, o.rounds_prev_7d)} vs prior 7d`)}
+      ${stat('Last 30 days', nf(o.rounds_30d))}
+      ${stat('Posters (7d)', nf(o.posters_7d))}
+      ${stat('Rounds in progress', nf(o.active_rounds_now), `${nf(o.active_rounds_live)} updated in last 30m`)}
+      ${stat('Drinks logged', nf(o.drinks_total), `${nf(o.beers_total)} beers · ${nf(o.cocktails_total)} cocktails`)}
+      ${stat('Avg per round', o.avg_drinks_per_round + ' drinks', dur(o.avg_duration_ms) + ' long')}
+    </div>
+    <h2>Engagement</h2><div class="grid">
+      ${stat('Cheers', nf(o.cheers_total), `${nf(o.cheers_7d)} this week`)}
+      ${stat('Comments', nf(o.comments_total), `${nf(o.comments_7d)} this week`)}
+      ${stat('Follows', nf(o.follows_total), `${nf(o.follows_7d)} this week`)}
+      ${stat('Cheers per round', o.rounds_total ? (o.cheers_total / o.rounds_total).toFixed(1) : '—')}
+      ${stat('Signed up, no username', nf(o.users_no_username), 'Left onboarding midway')}
+    </div>
+    <h2>Trend</h2><div class="card">
+      <div class="chartHead"><div class="chips" id="metric-chips"></div><div class="chips" id="range-chips"></div></div>
+      <div id="chart"></div></div>
+    <div class="two"><div><h2>Last 14 days</h2><div class="tw"><table><thead><tr><th>Day</th><th class="n">New</th><th class="n">Active</th><th class="n">Rounds</th><th class="n">Drinks</th></tr></thead><tbody id="daily-rows"></tbody></table></div></div>
+    <div><h2>Funnel</h2><div class="card bars" id="funnel"></div></div></div>`;
+  renderChips(); renderChart();
+  $('#daily-rows').innerHTML = daily.slice(-14).reverse().map(r =>
+    `<tr style="cursor:default"><td>${new Date(r.day + 'T00:00:00').toLocaleDateString(undefined, {weekday:'short', day:'numeric', month:'short'})}</td><td class="n">${r.signups}</td><td class="n">${r.active_users}</td><td class="n">${r.rounds}</td><td class="n">${r.drinks}</td></tr>`).join('');
+  const f = [['Signed up', o.users_total], ['Set a username', o.users_total - o.users_no_username], ['Posted a round', o.posters_total], ['Active last 30d', o.mau]];
+  $('#funnel').innerHTML = f.map(([l, v]) => `<div class="row"><span class="lbl">${l}</span><span class="tr"><i style="width:${o.users_total ? v / o.users_total * 100 : 0}%"></i></span><span class="num">${nf(v)}</span></div>`).join('');
+}
+function renderChips(){
+  $('#metric-chips').innerHTML = Object.entries(METRICS).map(([k, l]) => `<button class="chip${k === chartMetric ? ' on' : ''}" onclick="chartMetric='${k}';renderChips();renderChart()">${l}</button>`).join('');
+  $('#range-chips').innerHTML = [7, 30, 90].map(n => `<button class="chip${n === chartDays ? ' on' : ''}" onclick="chartDays=${n};renderChips();renderChart()">${n}d</button>`).join('');
+}
+function renderChart(){
+  const rows = daily.slice(-chartDays), vals = rows.map(r => Number(r[chartMetric]) || 0);
+  const max = Math.max(1, ...vals), W = 1000, H = 220, pl = 34, pb = 22, pt = 10, cw = (W - pl) / rows.length;
+  const total = vals.reduce((a, b) => a + b, 0);
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+  for(let i = 0; i <= 4; i++){
+    const y = pt + (H - pt - pb) * (1 - i / 4);
+    s += `<line x1="${pl}" x2="${W}" y1="${y}" y2="${y}"/><text x="0" y="${y + 3}">${Math.round(max * i / 4)}</text>`;
+  }
+  rows.forEach((r, i) => {
+    const h = (H - pt - pb) * vals[i] / max, x = pl + i * cw + cw * .15;
+    s += `<rect class="bar" x="${x}" y="${H - pb - h}" width="${cw * .7}" height="${Math.max(h, vals[i] ? 1 : 0)}" rx="2"><title>${r.day}: ${vals[i]}</title></rect>`;
+    if(i % Math.ceil(rows.length / 8) === 0) s += `<text x="${x}" y="${H - 6}">${r.day.slice(5)}</text>`;
+  });
+  $('#chart').innerHTML = s + `</svg><div class="muted" style="margin-top:6px">${nf(total)} ${METRICS[chartMetric].toLowerCase()} in the last ${chartDays} days (UTC days)</div>`;
+}
+
+// ---------------- users ----------------
+const U = { q: '', sort: 'joined', dir: 'desc', filt: 'all', page: 0, size: 50 };
+const FILTERS = { all: 'All', today: 'Joined today', week: 'Joined this week', posters: 'Have posted', lurkers: 'Never posted', google: 'Google', email: 'Email' };
+async function loadUsers(){
+  $('#view').innerHTML = `<h2>Users</h2><div class="tools"><input class="search" id="uq" placeholder="Search name, username, email or id" value="${esc(U.q)}">
+    <div class="chips">${Object.entries(FILTERS).map(([k, l]) => `<button class="chip${k === U.filt ? ' on' : ''}" onclick="U.filt='${k}';U.page=0;loadUsers()">${l}</button>`).join('')}</div></div>
+    <div id="utable"><div class="empty">Loading…</div></div>`;
+  let t; $('#uq').oninput = e => { clearTimeout(t); t = setTimeout(() => { U.q = e.target.value.trim(); U.page = 0; fetchUsers(); }, 250); };
+  await fetchUsers();
+}
+function sortBy(k){ U.dir = U.sort === k && U.dir === 'desc' ? 'asc' : 'desc'; U.sort = k; U.page = 0; fetchUsers(); }
+async function fetchUsers(){
+  const rows = await rpc('admin_users', { q: U.q, sort: U.sort, dir: U.dir, lim: U.size, off: U.page * U.size, filt: U.filt });
+  const total = rows[0]?.total_count || 0;
+  const th = (k, l, cls='') => `<th class="s ${cls}" onclick="sortBy('${k}')">${l}${U.sort === k ? `<span class="ar"> ${U.dir === 'asc' ? '↑' : '↓'}</span>` : ''}</th>`;
+  $('#utable').innerHTML = rows.length ? `<div class="tw"><table><thead><tr>${th('name', 'User')}<th>Email</th><th>Via</th>${th('joined', 'Joined')}${th('active', 'Last active')}${th('rounds', 'Rounds', 'n')}${th('drinks', 'Drinks', 'n')}${th('followers', 'Followers', 'n')}</tr></thead><tbody>
+    ${rows.map(u => `<tr onclick="openUser('${u.id}')"><td><div class="u">${avatar(u)}<div><b>${esc(u.display_name)}</b><small>@${esc(u.username)}</small></div></div></td>
+    <td>${esc(u.email || '—')}</td><td><span class="tag ${u.provider === 'google' ? 'g' : ''}">${esc(u.provider || '—')}</span></td>
+    <td title="${esc(when(u.created_at))}">${ago(u.created_at)}</td><td title="${esc(when(u.last_activity_at))}">${ago(u.last_activity_at)}</td>
+    <td class="n">${nf(u.rounds)}</td><td class="n">${nf(u.drinks)}</td><td class="n">${nf(u.followers)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="pager"><span>${nf(total)} users · showing ${U.page * U.size + 1}–${U.page * U.size + rows.length}</span><span>
+    <button class="btn sm" ${U.page ? '' : 'disabled'} onclick="U.page--;fetchUsers()">Prev</button>
+    <button class="btn sm" ${(U.page + 1) * U.size < total ? '' : 'disabled'} onclick="U.page++;fetchUsers()">Next</button></span></div>`
+    : '<div class="empty">No users match.</div>';
+}
+
+// ---------------- rounds ----------------
+const R = { q: '', page: 0, size: 20 };
+async function loadRounds(){
+  $('#view').innerHTML = `<h2>All rounds, newest first</h2><div class="tools"><input class="search" id="rq" placeholder="Search title, description or @username" value="${esc(R.q)}"></div><div id="rlist"></div>`;
+  let t; $('#rq').oninput = e => { clearTimeout(t); t = setTimeout(() => { R.q = e.target.value.trim(); R.page = 0; fetchRounds(); }, 250); };
+  await fetchRounds();
+}
+async function fetchRounds(){
+  const rows = await rpc('admin_events', { uid: null, lim: R.size, off: R.page * R.size, q: R.q });
+  const total = rows[0]?.total_count || 0;
+  $('#rlist').innerHTML = (rows.length ? rows.map(e => eventCard(e, true)).join('') : '<div class="empty">No rounds yet.</div>') +
+    (total > R.size ? `<div class="pager"><span>${nf(total)} rounds · page ${R.page + 1}</span><span>
+    <button class="btn sm" ${R.page ? '' : 'disabled'} onclick="R.page--;fetchRounds();scrollTo(0,0)">Prev</button>
+    <button class="btn sm" ${(R.page + 1) * R.size < total ? '' : 'disabled'} onclick="R.page++;fetchRounds();scrollTo(0,0)">Next</button></span></div>` : '');
+}
+function eventCard(e, showAuthor){
+  const shots = [...(e.entries || []).filter(x => safeUrl(x.photo_url)).map(x => ({ u: x.photo_url, l: x.type })),
+                 ...(e.extra_photos || []).filter(safeUrl).map(u => ({ u, l: 'extra' }))];
+  return `<div class="ev" id="ev-${e.id}"><div class="top">
+    ${showAuthor ? `<a class="u" href="#" style="text-decoration:none;color:inherit" onclick="openUser('${e.user_id}');return false">${avatar(e)}<div><b>${esc(e.display_name)}</b><small>@${esc(e.username)}</small></div></a>` : '<span></span>'}
+    <span class="muted" title="${esc(when(e.posted_at))}">${esc(when(e.posted_at))} · ${ago(e.posted_at)}</span></div>
+    <h3>${esc(e.title)}</h3>${e.description ? `<p>${esc(e.description)}</p>` : ''}
+    <div class="meta"><span><b>${e.total}</b> drinks</span><span><b>${e.beers}</b> beers</span><span><b>${e.cocktails}</b> cocktails</span><span><b>${dur(e.duration_ms)}</b></span>
+      <span>${esc(e.mode)}</span><span><b>${e.cheers_count}</b> cheers</span><span><b>${e.comments_count}</b> comments</span></div>
+    ${shots.length ? `<div class="photos">${shots.map(s => `<div class="ph"><img loading="lazy" src="${esc(safeUrl(s.u))}" alt="" onclick="zoom(this.src)"><span>${esc(s.l)}</span></div>`).join('')}</div>` : ''}
+    <div style="margin-top:12px;display:flex;gap:8px">
+      ${e.comments_count ? `<button class="btn sm" onclick="showComments('${e.id}',this)">View comments</button>` : ''}
+      <button class="btn sm danger" onclick="delEvent('${e.id}')">Delete round</button></div>
+    <div class="cm" id="cm-${e.id}" hidden></div></div>`;
+}
+function zoom(src){ const l = $('#lightbox'); $('img', l).src = src; l.classList.add('open'); }
+async function showComments(id, btn){
+  const box = $('#cm-' + id);
+  if(!box.hidden){ box.hidden = true; btn.textContent = 'View comments'; return; }
+  const rows = await rpc('admin_event_comments', { eid: id });
+  box.innerHTML = rows.map(c => `<div><span class="t"><b>@${esc(c.username)}</b> ${esc(c.body)}<br><small>${ago(c.created_at)}</small></span>
+    <button class="btn sm danger" onclick="delComment('${c.id}',this)">Delete</button></div>`).join('') || '<small class="muted">No comments.</small>';
+  box.hidden = false; btn.textContent = 'Hide comments';
+}
+async function delComment(id, btn){
+  if(!confirm('Delete this comment permanently?')) return;
+  try{ await rpc('admin_delete_comment', { cid: id }); btn.closest('div').remove(); toast('Comment deleted'); }catch(e){ toast('Failed: ' + e.message); }
+}
+async function delEvent(id){
+  if(!confirm('Delete this round permanently? This also removes its cheers and comments and cannot be undone.')) return;
+  try{ await rpc('admin_delete_event', { eid: id }); $('#ev-' + id)?.remove(); toast('Round deleted'); }catch(e){ toast('Failed: ' + e.message); }
+}
+
+// ---------------- user drawer ----------------
+async function openUser(id){
+  const d = $('#drawer'); d.classList.add('open'); $('#drawer-body').innerHTML = '<div class="empty">Loading…</div>';
+  try{
+    const [u, evs] = await Promise.all([rpc('admin_user_detail', { uid: id }), rpc('admin_events', { uid: id, lim: 50, off: 0, q: '' })]);
+    if(!u) return $('#drawer-body').innerHTML = '<div class="empty">User not found.</div>';
+    const k = (l, v) => `<div class="card"><div class="v">${v}</div><div class="l">${l}</div></div>`;
+    $('#drawer-body').innerHTML = `<button class="btn sm x" onclick="closeDrawer()">Close</button>
+      <div class="u" style="gap:14px">${avatar(u).replace('class="av"', 'class="av" style="width:64px;height:64px;font-size:24px"')}
+      <div><b style="font-size:18px">${esc(u.display_name)}</b><small>@${esc(u.username)} · ${esc(u.email || 'no email')}</small>
+      <div style="margin-top:4px"><span class="tag ${u.provider === 'google' ? 'g' : ''}">${esc(u.provider)}</span>
+      ${u.is_admin ? ' <span class="tag adm">admin</span>' : ''}${u.has_active_round ? ' <span class="tag ok">round in progress</span>' : ''}</div></div></div>
+      <div class="muted" style="margin-top:12px">Joined ${esc(when(u.created_at))} · Last sign-in ${esc(when(u.last_sign_in_at))}<br>ID <code>${esc(u.id)}</code></div>
+      <div class="kv">${k('Rounds', nf(u.rounds))}${k('Drinks', nf(u.drinks))}${k('Beers', nf(u.beers))}${k('Cocktails', nf(u.cocktails))}
+      ${k('Followers', nf(u.followers))}${k('Following', nf(u.following))}${k('Cheers received', nf(u.cheers_received))}${k('Comments received', nf(u.comments_received))}
+      ${k('Cheers given', nf(u.cheers_given))}${k('Comments given', nf(u.comments_given))}</div>
+      <h2>Posts (${nf(evs[0]?.total_count || 0)})</h2>${evs.length ? evs.map(e => eventCard(e, false)).join('') : '<div class="empty">Hasn\'t posted any rounds.</div>'}`;
+  }catch(e){ $('#drawer-body').innerHTML = `<div class="empty">Couldn't load: ${esc(e.message)}</div>`; }
+}
+function closeDrawer(){ $('#drawer').classList.remove('open'); }
+document.addEventListener('keydown', e => { if(e.key === 'Escape'){ closeDrawer(); $('#lightbox').classList.remove('open'); } });
+
+sb.auth.onAuthStateChange((ev) => { if(ev === 'SIGNED_OUT' && me) location.reload(); });
+boot();
+</script>
+</body>
+</html>
