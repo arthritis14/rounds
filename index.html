@@ -412,7 +412,7 @@
      html2canvas can't render CSS filter/backdrop-filter, so text uses text-shadow and the chart bakes its shadow into the SVG. */
   .share-preview .card{ position:absolute; z-index:1; left:12px; right:12px; top:96px; bottom:64px; box-sizing:border-box; padding:4px 0 0; display:flex; flex-direction:column; }
   .share-preview .stats{ display:flex; flex:none; padding-bottom:10px; margin:0 4px; }
-  .share-preview .stats .cell{ flex:1 1 0; min-width:0; text-align:center; }
+  .share-preview .stats .cell{ flex:1 1 auto; min-width:0; padding:0 9px; text-align:center; }
   .share-preview .stats .cell + .cell{ border-left:1px solid rgba(255,255,255,.45); }
   .share-preview .stats .v{ font-family:'Bricolage Grotesque', var(--font-sans); font-weight:800; font-size:22px; letter-spacing:-0.04em; font-variant-numeric:tabular-nums; line-height:1.15; color:#fff; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.55), 0 2px 12px rgba(0,0,0,.45); }
   .share-preview .stats .cell:nth-child(2) .v{ transform:rotate(-3deg); }
