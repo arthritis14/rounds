@@ -32,7 +32,7 @@
 <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebSite", "@id": "https://userounds.lol/#website", "url": "https://userounds.lol/", "name": "Rounds", "alternateName": ["Rounds app", "Strava for drinking", "Strava for beer"]}, {"@type": "WebApplication", "@id": "https://userounds.lol/#app", "name": "Rounds", "url": "https://userounds.lol/", "description": "Rounds is the Strava for drinking. Log every beer and cocktail on a night out, graph your night and see your friends' rounds. Free, in your browser.", "applicationCategory": "LifestyleApplication", "operatingSystem": "Any (web browser)", "browserRequirements": "Requires JavaScript", "image": "https://userounds.lol/og-image.jpg", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is there a Strava for drinking?", "acceptedAnswer": {"@type": "Answer", "text": "Yes, that's Rounds. Start a session, log each beer or cocktail as it arrives, then post the night with a graph, your pace and the time. Friends cheer it the way they give kudos on Strava."}}, {"@type": "Question", "name": "Is there a Strava for beer?", "acceptedAnswer": {"@type": "Answer", "text": "Pick beer mode and every pint, can or pitcher becomes a step on your graph, so you can compare the night with your friends'."}}, {"@type": "Question", "name": "Is it free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Rounds is free and runs in your phone's browser, so there's nothing to download."}}]}]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
 <!-- Vercel Web Analytics: cookieless visitor counts, shown in the Vercel dashboard -->
 <script>window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };</script>
 <script defer src="/_vercel/insights/script.js"></script>
@@ -414,9 +414,16 @@
   .share-preview .stats{ display:flex; flex:none; padding-bottom:10px; margin:0 4px; }
   .share-preview .stats .cell{ flex:1 1 0; min-width:0; text-align:center; }
   .share-preview .stats .cell + .cell{ border-left:1px solid rgba(255,255,255,.45); }
-  .share-preview .stats .v{ font-family:var(--font-sans); font-weight:700; font-size:24px; letter-spacing:-0.03em; font-variant-numeric:tabular-nums; line-height:1.15; color:#fff; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.55), 0 2px 12px rgba(0,0,0,.45); }
-  .share-preview .stats .v.accent{ color:#FF8147; }
-  .share-preview .stats .l{ margin-top:3px; font-family:var(--font-sans); font-weight:600; font-size:7.5px; letter-spacing:.2em; text-transform:uppercase; color:rgba(255,255,255,.92); text-shadow:0 1px 3px rgba(0,0,0,.6), 0 1px 8px rgba(0,0,0,.4); }
+  .share-preview .stats .v{ font-family:'Bricolage Grotesque', var(--font-sans); font-weight:800; font-size:22px; letter-spacing:-0.04em; font-variant-numeric:tabular-nums; line-height:1.15; color:#fff; white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,.55), 0 2px 12px rgba(0,0,0,.45); }
+  .share-preview .stats .cell:nth-child(2) .v{ transform:rotate(-3deg); }
+  /* Classic: the original Geist numerals, no tilt. */
+  .share-preview.font-classic .stats .v{ font-family:var(--font-sans); font-weight:700; font-size:24px; letter-spacing:-0.03em; }
+  .share-preview.font-classic .stats .l{ font-family:var(--font-sans); font-weight:600; }
+  .share-preview.font-classic .stats .cell:nth-child(2) .v{ transform:none; }
+  .share-font-toggle{ display:flex; gap:4px; padding:3px; margin:14px auto 0; background:rgba(255,255,255,.1); border-radius:12px; flex:none; }
+  .share-font-toggle button{ border:none; background:none; color:rgba(255,255,255,.7); font-weight:600; font-size:13px; padding:7px 16px; border-radius:9px; cursor:pointer; }
+  .share-font-toggle button.active{ background:rgba(255,255,255,.95); color:#111; }
+  .share-preview .stats .l{ margin-top:3px; font-family:'Bricolage Grotesque', var(--font-sans); font-weight:800; font-size:7.5px; letter-spacing:.2em; text-transform:uppercase; color:rgba(255,255,255,.92); text-shadow:0 1px 3px rgba(0,0,0,.6), 0 1px 8px rgba(0,0,0,.4); }
   .share-preview .card svg{ font-family:var(--font-sans); font-weight:600; display:block; width:236px; height:222px; flex:none; margin-top:6px; }
   .share-preview .wm{ position:absolute; z-index:2; bottom:24px; left:0; right:0; display:flex; align-items:center; justify-content:center; gap:8px; font-family:var(--font-sans); font-weight:800; font-size:12px; letter-spacing:.3em; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.55); }
   .share-preview .wm span{ color:var(--primary-light); }
@@ -791,6 +798,10 @@
         </div>
         <div class="wm"><img class="brand-logo" src="/logo.webp" width="406" height="120" alt="Rounds" style="height:14px;width:auto;display:inline-block;"><span class="dot"></span><i id="share-day"></i></div>
       </div>
+    </div>
+    <div class="share-font-toggle" id="share-font-toggle">
+      <button class="active" data-font="fun" onclick="setShareFont('fun')">Fun</button>
+      <button data-font="classic" onclick="setShareFont('classic')">Classic</button>
     </div>
   </div>
 
@@ -2121,7 +2132,7 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
       count++;
       d += ` L${x.toFixed(1)},${yScale(count).toFixed(1)}`;
     }
-    markers += `<g>${opts.story ? `<circle cx="${x.toFixed(1)}" cy="${yScale(count).toFixed(1)}" r="${(opts.pinR||9)+3}" fill="#FF5A1F" fill-opacity=".25"/>` : ''}<circle cx="${x.toFixed(1)}" cy="${yScale(count).toFixed(1)}" r="${opts.pinR||9}" fill="#fff" stroke="${isDrink(e) ? '#FC4C02' : '#9A9AA2'}" stroke-width="2"/><text x="${x.toFixed(1)}" y="${(yScale(count)+1).toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="${(opts.pinR||9)*1.1}">${EMOJI[e.type] || ''}</text></g>`;
+    markers += `<g><circle cx="${x.toFixed(1)}" cy="${yScale(count).toFixed(1)}" r="${opts.pinR||9}" fill="#fff" stroke="${isDrink(e) ? '#FC4C02' : '#9A9AA2'}" stroke-width="2"/><text x="${x.toFixed(1)}" y="${(yScale(count)+1).toFixed(1)}" text-anchor="middle" dominant-baseline="central" font-size="${(opts.pinR||9)*1.1}">${EMOJI[e.type] || ''}</text></g>`;
   });
   d += ` L${xScale(endTime).toFixed(1)},${yScale(count).toFixed(1)}`;
 
@@ -2175,19 +2186,14 @@ function buildCountChart(entries, startTime, endTime, w, h, opts){
   }
 
   if(opts.story){
-    // Story-share styling: a glowing ember gradient line over a soft area fill,
-    // faint dotted rungs and no hard axis lines, so it sits quietly on a photo.
-    const x0 = xScale(startTime).toFixed(1), x1 = xScale(endTime).toFixed(1), yb = yScale(0).toFixed(1);
-    const defs = `<defs>
-      <linearGradient id="sg-line" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FF9A5C"/><stop offset=".55" stop-color="#FF5A1F"/><stop offset="1" stop-color="#FF2E63"/></linearGradient>
-      <linearGradient id="sg-area" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF5A1F" stop-opacity=".3"/><stop offset="1" stop-color="#FF5A1F" stop-opacity="0"/></linearGradient>
-      <filter id="sg-shadow" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur in="SourceAlpha" stdDeviation="1.8"/><feOffset dy="1" result="b"/><feComponentTransfer><feFuncA type="linear" slope=".7"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    </defs>`;
-    const area = `<path d="${d} L${x1},${yb} L${x0},${yb} Z" fill="url(#sg-area)" stroke="none"/>`;
-    const glow = `<path d="${d}" fill="none" stroke="#FF5A1F" stroke-opacity=".22" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><path d="${d}" fill="none" stroke="#FF7A3D" stroke-opacity=".35" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>`;
-    const line = `<path d="${d}" fill="none" stroke="url(#sg-line)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`;
-    const baseline = `<line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="${axisColor}" stroke-width="1" stroke-linecap="round"/>`;
-    return `${defs}<g filter="url(#sg-shadow)">${yLabels}${ticks}${baseline}${area}${glow}${line}${markers}</g>`;
+    // Story-share styling: flat Strava-orange line (no glow, gradient or area
+    // fill), faint dotted rungs and a solid Y axis so it reads on any photo.
+    // A thin dark under-stroke keeps the line legible without blurring anything.
+    const under = `<path d="${d}" fill="none" stroke="#000" stroke-opacity=".28" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const line = `<path d="${d}" fill="none" stroke="#FC4C02" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+    const baseline = `<line x1="${padL}" y1="${h-padB}" x2="${w-padR}" y2="${h-padB}" stroke="${axisColor}" stroke-width="1.25" stroke-linecap="round"/>`;
+    const yAxis = `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${h-padB}" stroke="${axisColor}" stroke-width="1.25" stroke-linecap="round"/>`;
+    return `${yLabels}${ticks}${baseline}${yAxis}${under}${line}${markers}`;
   }
   return `${yLabels}${yAxisLine}${ticks}${axisLine}<path d="${d}" fill="none" stroke="#FC4C02" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>${markers}`;
 }
@@ -2942,6 +2948,10 @@ function openShare(eventId){
   document.getElementById('share-image-btn').style.display = canShareFiles() ? '' : 'none';
   document.getElementById('share-modal').classList.add('active');
 }
+function setShareFont(f){
+  document.getElementById('share-preview').classList.toggle('font-classic', f === 'classic');
+  document.querySelectorAll('#share-font-toggle button').forEach(b => b.classList.toggle('active', b.dataset.font === f));
+}
 function closeShareModal(){
   document.getElementById('share-modal').classList.remove('active');
   shareCtx = null;
@@ -2951,7 +2961,7 @@ function renderSharePreview(ev){
   const pace = ev.pace === '\u2014' ? ev.pace : ev.pace.replace('/round', '');
   const day = new Date(ev.startTime).toLocaleDateString([], { weekday:'short', day:'numeric', month:'short' }).replace(',', '');
   document.getElementById('share-stats').innerHTML = `
-    <div class="cell"><div class="v accent">${ev.total}</div><div class="l">Rounds</div></div>
+    <div class="cell"><div class="v">${ev.total}</div><div class="l">Rounds</div></div>
     <div class="cell"><div class="v">${pace}</div><div class="l">Per round</div></div>
     <div class="cell"><div class="v">${formatDurationShort(ev.duration)}</div><div class="l">Time</div></div>`;
   document.getElementById('share-day').textContent = day;
@@ -2962,12 +2972,53 @@ function renderSharePreview(ev){
     });
 }
 
+// html2canvas draws an inline <svg> at its 1x CSS size and then stretches it to
+// the 3x canvas, which is what made the exported graph soft. Rasterise the SVG
+// ourselves at full output resolution and swap it in as an <img> for the capture.
+function rasteriseSvg(svg, scale){
+  return new Promise((resolve, reject) => {
+    const vb = svg.viewBox.baseVal;
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('width', vb.width * scale);
+    clone.setAttribute('height', vb.height * scale);
+    // A standalone SVG image can't see page CSS vars or webfonts, so spell the font out.
+    clone.setAttribute('font-family', "Geist, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif");
+    clone.setAttribute('font-weight', '600');
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = vb.width * scale; c.height = vb.height * scale;
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      resolve(c);
+    };
+    img.onerror = reject;
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(clone));
+  });
+}
+
 async function generateShareCanvas(){
   const node = document.getElementById('share-preview');
-  // backgroundColor:null keeps it a real transparent PNG — a sticker you can
-  // drop onto an Instagram Story (or anywhere else), not a screenshot with the
-  // on-screen checkerboard baked in. That checkerboard is only an editing cue.
-  return html2canvas(node, { backgroundColor: null, scale: 3, useCORS: true });
+  const OUT_SCALE = 4;
+  const svg = node.querySelector('.card svg');
+  let swap = null;
+  try{
+    if(document.fonts && document.fonts.ready) await document.fonts.ready;
+    const c = await rasteriseSvg(svg, OUT_SCALE);
+    swap = document.createElement('img');
+    swap.src = c.toDataURL('image/png');
+    swap.style.cssText = 'display:block;width:236px;height:222px;flex:none;margin-top:6px;';
+    svg.style.display = 'none';
+    svg.parentNode.insertBefore(swap, svg);
+  }catch(err){ swap = null; svg.style.display = ''; }
+  try{
+    // backgroundColor:null keeps it a real transparent PNG — a sticker you can
+    // drop onto an Instagram Story (or anywhere else), not a screenshot with the
+    // on-screen checkerboard baked in. That checkerboard is only an editing cue.
+    return await html2canvas(node, { backgroundColor: null, scale: OUT_SCALE, useCORS: true });
+  } finally {
+    if(swap){ swap.remove(); svg.style.display = ''; }
+  }
 }
 
 // True only when the browser can genuinely hand an image file to the OS share
